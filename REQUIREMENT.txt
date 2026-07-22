@@ -1,0 +1,70 @@
+# ====================================================================
+# PLAYER Application - System & Package Requirements
+# File: REQUIREMENT.txt
+# ====================================================================
+
+# --------------------------------------------------------------------
+# 1. System & Runtime Prerequisites
+# --------------------------------------------------------------------
+Node.js >= 18.18.0 (Recommended: Node.js 20 LTS or higher)
+npm >= 9.0.0 (or yarn / pnpm / bun)
+
+# --------------------------------------------------------------------
+# 2. Installation Command
+# --------------------------------------------------------------------
+# Run the following command in the project root folder to install all packages:
+# npm install
+
+# --------------------------------------------------------------------
+# 3. Core Production Dependencies (package.json)
+# --------------------------------------------------------------------
+next@15.5.20
+react@^19.0.0
+react-dom@^19.0.0
+zustand@^5.0.2
+
+# --------------------------------------------------------------------
+# 4. Development & Build Dependencies
+# --------------------------------------------------------------------
+typescript@^5.0.0
+tailwindcss@^4.0.0
+@tailwindcss/postcss@^4.0.0
+eslint@^9.0.0
+eslint-config-next@15.5.20
+@types/node@^20.0.0
+@types/react@^19.0.0
+@types/react-dom@^19.0.0
+postcss@^8.0.0
+
+# --------------------------------------------------------------------
+# 5. Required API Keys & Features Environment Setup (.env.local)
+# --------------------------------------------------------------------
+# Copy .env.example to .env.local and configure the following features:
+
+# Spotify Feature Integration
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+NEXT_PUBLIC_SPOTIFY_CLIENT_ID=your_spotify_client_id
+# Callback URI to register in Spotify Developer Dashboard:
+# http://127.0.0.1:3000/spotify/callback
+
+# YouTube Search & Playback Feature
+YOUTUBE_API_KEY=your_youtube_api_key
+
+# SoundCloud Search & Playback Feature
+SOUNDCLOUD_CLIENT_ID=your_soundcloud_client_id
+
+# --------------------------------------------------------------------
+# 6. Available Application Scripts
+# --------------------------------------------------------------------
+# Development Server:
+# npm run dev
+
+# Production Build:
+# npm run build
+
+# Start Production Server:
+# npm start
+
+# Linting:
+# npm run lint
