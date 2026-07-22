@@ -48,14 +48,6 @@ function SearchSmallIcon() {
   );
 }
 
-function ListIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-      <path d="M15 14.5H5V13h10v1.5zm0-5.75H5v-1.5h10v1.5zM15 3H5V1.5h10V3zM3 3H1V1.5h2V3zm0 5.75H1v-1.5h2v1.5zM3 14.5H1V13h2v1.5z"/>
-    </svg>
-  );
-}
-
 function HeartFilledIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-white">
@@ -75,7 +67,6 @@ function MusicNoteIcon() {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function Sidebar() {
-  const [mounted, setMounted] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -94,8 +85,6 @@ export function Sidebar() {
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [isResizing, setIsResizing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (showSearch) searchInputRef.current?.focus();
