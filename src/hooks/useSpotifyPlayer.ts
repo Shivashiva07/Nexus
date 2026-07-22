@@ -38,8 +38,7 @@ async function startSpotifyUriPlayback(deviceId: string, token: string, uri: str
 
 /**
  * Owns the Web Playback SDK connection for Premium accounts. Only activates
- * when a Spotify access token is present; DynamicMediaDock falls back to the
- * public embed iframe for everyone else (or if this connection drops).
+ * when a Spotify access token is present.
  */
 export function useSpotifyPlayer() {
   const playerRef = useRef<Spotify.Player | null>(null);
@@ -75,6 +74,11 @@ export function useSpotifyPlayer() {
 
       player.addListener('ready', ({ device_id }) => {
         deviceIdRef.current = device_id;
+        const store = usePlayerStore.getState();
+        if (store.currentTrack?.source === 'spotify' && store.currentTrack.externalId && store.isPlaying) {
+          lastStartedTrackId.current = store.currentTrack.id;
+          startSpotifyUriPlayback(device_id, accessToken as string, store.currentTrack.externalId);
+        }
       });
       player.addListener('not_ready', () => {
         deviceIdRef.current = null;
@@ -99,38 +103,38 @@ export function useSpotifyPlayer() {
       playerRef.current = null;
       deviceIdRef.current = null;
     };
-    // The SDK connection is keyed on the token becoming available, not per-track.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canUseSdk, accessToken]);
 
+  // Synchronized Track Loading & Transport Control for Spotify SDK
   useEffect(() => {
     if (!canUseSdk || !isActive || !currentTrack?.externalId) return;
     const deviceId = deviceIdRef.current;
     if (!deviceId || !accessToken) return;
 
-    if (isPlaying && lastStartedTrackId.current !== currentTrack.id) {
-      lastStartedTrackId.current = currentTrack.id;
-      startSpotifyUriPlayback(deviceId, accessToken, currentTrack.externalId);
+    if (isPlaying) {
+      if (lastStartedTrackId.current !== currentTrack.id) {
+        lastStartedTrackId.current = currentTrack.id;
+        startSpotifyUriPlayback(deviceId, accessToken, currentTrack.externalId);
+      } else {
+        playerRef.current?.resume();
+      }
+    } else {
+      playerRef.current?.pause();
     }
   }, [canUseSdk, isActive, isPlaying, currentTrack?.id, currentTrack?.externalId, accessToken]);
 
-  useEffect(() => {
-    if (!canUseSdk || !isActive) return;
-    const player = playerRef.current;
-    if (!player || lastStartedTrackId.current !== currentTrack?.id) return;
-
-    if (isPlaying) player.resume();
-    else player.pause();
-  }, [canUseSdk, isActive, isPlaying, currentTrack?.id]);
-
+  // Volume sync
   useEffect(() => {
     if (canUseSdk) playerRef.current?.setVolume(volume);
   }, [canUseSdk, volume]);
 
+  // Reset last track ID when Spotify becomes inactive
   useEffect(() => {
     if (!isActive) lastStartedTrackId.current = null;
   }, [isActive]);
 
+  // Seek handler
   useEffect(() => {
     if (seekRequest === null || !isActive || !canUseSdk) return;
     playerRef.current?.seek(seekRequest * 1000);

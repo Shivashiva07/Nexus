@@ -27,8 +27,7 @@ function loadYouTubeIframeApi(): Promise<void> {
 
 /**
  * Owns the lifecycle of a single YT.Player mounted on #yt-dock-player and keeps
- * it in sync with the Zustand player store. The container div must stay mounted
- * for the lifetime of the app since the IFrame API replaces it with an <iframe>.
+ * it in sync with the Zustand player store.
  */
 export function useYouTubePlayer(containerId: string) {
   const playerRef = useRef<YT.Player | null>(null);
@@ -68,6 +67,14 @@ export function useYouTubePlayer(containerId: string) {
           onReady: () => {
             readyRef.current = true;
             playerRef.current?.setVolume(Math.round(volume * 100));
+            const store = usePlayerStore.getState();
+            if (store.currentTrack?.source === 'youtube' && store.currentTrack.externalId) {
+              if (store.isPlaying) {
+                playerRef.current?.loadVideoById(store.currentTrack.externalId);
+              } else {
+                playerRef.current?.cueVideoById(store.currentTrack.externalId);
+              }
+            }
           },
           onStateChange: (event) => {
             if (event.data === window.YT.PlayerState.ENDED) {
@@ -85,28 +92,42 @@ export function useYouTubePlayer(containerId: string) {
       playerRef.current = null;
       readyRef.current = false;
     };
-    // Player is created exactly once for the app's lifetime.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [containerId]);
 
+  // Synchronized Track Loading & Transport Control for YouTube
   useEffect(() => {
     const player = playerRef.current;
-    if (!player || !readyRef.current || !isActive || !currentTrack?.externalId) return;
-    player.cueVideoById(currentTrack.externalId);
-    if (isPlaying) player.loadVideoById(currentTrack.externalId);
-  }, [currentTrack?.id, currentTrack?.externalId, isActive]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!player || !readyRef.current) return;
 
-  useEffect(() => {
-    const player = playerRef.current;
-    if (!player || !readyRef.current || !isActive) return;
+    if (!isActive || !currentTrack?.externalId) {
+      try { player.pauseVideo(); } catch {}
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+      return;
+    }
 
     if (isPlaying) {
-      player.playVideo();
+      try {
+        player.loadVideoById(currentTrack.externalId);
+      } catch {}
+
+      if (pollRef.current) clearInterval(pollRef.current);
       pollRef.current = setInterval(() => {
-        updateProgress(player.getCurrentTime());
+        if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
+          updateProgress(playerRef.current.getCurrentTime());
+        }
       }, 500);
     } else {
-      player.pauseVideo();
+      try {
+        player.pauseVideo();
+      } catch {}
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
     }
 
     return () => {
@@ -115,16 +136,14 @@ export function useYouTubePlayer(containerId: string) {
         pollRef.current = null;
       }
     };
-  }, [isPlaying, isActive, updateProgress]);
+  }, [isActive, currentTrack?.id, currentTrack?.externalId, isPlaying, updateProgress]);
 
-  useEffect(() => {
-    if (!isActive) playerRef.current?.pauseVideo();
-  }, [isActive]);
-
+  // Volume sync
   useEffect(() => {
     playerRef.current?.setVolume(Math.round(volume * 100));
   }, [volume]);
 
+  // Seek handler
   useEffect(() => {
     if (seekRequest === null || !isActive) return;
     playerRef.current?.seekTo(seekRequest, true);

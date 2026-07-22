@@ -5,8 +5,7 @@ import { usePlayerStore } from '@/store/usePlayerStore';
 
 /**
  * Binds a native <audio> element to the player store for SoundCloud and VSNectar tracks.
- * The element itself lives in DynamicMediaDock (hidden), this hook just wires
- * source swaps, transport state, volume, and progress reporting.
+ * Wires source swaps, transport state, volume, and progress reporting.
  */
 export function useNativeAudio(audioRef: RefObject<HTMLAudioElement | null>) {
   const currentTrack = usePlayerStore((s) => s.currentTrack);
@@ -20,33 +19,40 @@ export function useNativeAudio(audioRef: RefObject<HTMLAudioElement | null>) {
 
   const isActive = currentTrack?.source === 'soundcloud' || currentTrack?.source === 'vsnectar';
 
+  // Synchronized Track Loading & Playback Execution
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !isActive || !currentTrack?.streamUrl) return;
-    if (audio.src !== currentTrack.streamUrl) {
+    if (!audio) return;
+
+    if (!isActive || !currentTrack?.streamUrl) {
+      audio.pause();
+      return;
+    }
+
+    const isNewSource = audio.src !== currentTrack.streamUrl;
+    if (isNewSource) {
       audio.src = currentTrack.streamUrl;
       audio.load();
     }
-  }, [audioRef, isActive, currentTrack?.streamUrl]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !isActive) return;
 
     if (isPlaying) {
-      audio.play().catch(() => {
-        // Autoplay can be rejected before a user gesture unlocks the element; the
-        // transport controls in PlayerBar remain the source of truth for isPlaying.
-      });
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('Native audio playback error:', err);
+        });
+      }
     } else {
       audio.pause();
     }
-  }, [audioRef, isPlaying, isActive]);
+  }, [audioRef, isActive, currentTrack?.id, currentTrack?.streamUrl, isPlaying]);
 
+  // Volume sync
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [audioRef, volume]);
 
+  // Progress, duration, ended events
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -64,7 +70,6 @@ export function useNativeAudio(audioRef: RefObject<HTMLAudioElement | null>) {
     audio.addEventListener('loadedmetadata', handleDuration);
     audio.addEventListener('durationchange', handleDuration);
 
-    // Initial check in case metadata was already loaded
     if (audio.duration && isFinite(audio.duration) && audio.duration > 0) {
       updateCurrentTrackDuration(audio.duration);
     }
@@ -77,10 +82,7 @@ export function useNativeAudio(audioRef: RefObject<HTMLAudioElement | null>) {
     };
   }, [audioRef, updateProgress, next, updateCurrentTrackDuration]);
 
-  useEffect(() => {
-    if (!isActive) audioRef.current?.pause();
-  }, [audioRef, isActive]);
-
+  // Seek handler
   useEffect(() => {
     if (seekRequest === null || !isActive || !audioRef.current) return;
     audioRef.current.currentTime = seekRequest;

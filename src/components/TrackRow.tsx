@@ -43,6 +43,14 @@ function TrashSmallIcon() {
   );
 }
 
+function QueueAddIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
+      <path d="M12 13h-2v-1.5h2V10h1.5v1.5H15V13h-1.5v1.5H12V13zM1 2.5h14V4H1V2.5zm0 5.5h14V9.5H1V8zm0 5.5h7.5V15H1v-1.5z"/>
+    </svg>
+  );
+}
+
 interface TrackRowProps {
   track: Track;
   isActive?: boolean;
@@ -58,6 +66,7 @@ export function TrackRow({ track, isActive, isLoading, onPlay, index, isCollapse
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const library = usePlayerStore((s) => s.library);
   const toggleLibraryTrack = usePlayerStore((s) => s.toggleLibraryTrack);
+  const addToQueue = usePlayerStore((s) => s.addToQueue);
   
   const isSaved = library.some((t) => t.id === track.id);
   const displayDuration = (isActive && currentTrack?.id === track.id && currentTrack.duration > 0)
@@ -169,6 +178,20 @@ export function TrackRow({ track, isActive, isLoading, onPlay, index, isCollapse
 
       {/* Actions & Duration */}
       <div className="flex shrink-0 items-center justify-end gap-1.5">
+        {/* Add to queue */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            addToQueue(track);
+          }}
+          className="p-1 text-white/20 hover:text-emerald-400 opacity-0 group-hover:opacity-100 transition-all"
+          title="Add to queue"
+          aria-label="Add to queue"
+        >
+          <QueueAddIcon />
+        </button>
+
         {/* Add to playlist (+) */}
         {onAddToPlaylist && (
           <button

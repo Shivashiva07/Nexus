@@ -39,22 +39,6 @@ function SkipForwardIcon() {
   );
 }
 
-function ShuffleIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-      <path d="M13.151.922a.75.75 0 1 0-1.06 1.06L13.109 3H11.16a3.75 3.75 0 0 0-2.873 1.34l-6.173 7.356A2.25 2.25 0 0 1 .39 12.5H0V14h.39a3.75 3.75 0 0 0 2.873-1.34l6.173-7.356a2.25 2.25 0 0 1 1.724-.804h1.947l-1.017 1.018a.75.75 0 0 0 1.06 1.06l2.293-2.293a.75.75 0 0 0 0-1.06L13.151.922zM11.16 13h1.948l-1.018 1.018a.75.75 0 0 0 1.06 1.06l2.293-2.293a.75.75 0 0 0 0-1.06l-2.293-2.293a.75.75 0 1 0-1.06 1.06L13.109 11.5H11.16a2.25 2.25 0 0 1-1.724-.804l-1.428-1.703a.75.75 0 0 0-1.15.964l1.427 1.703a3.75 3.75 0 0 0 2.874 1.34z"/>
-    </svg>
-  );
-}
-
-function RepeatIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-      <path d="M0 4.75A3.75 3.75 0 0 1 3.75 1h8.5A3.75 3.75 0 0 1 16 4.75v5a.75.75 0 0 1-1.5 0v-5A2.25 2.25 0 0 0 12.25 2.5h-8.5A2.25 2.25 0 0 0 1.5 4.75v5A2.25 2.25 0 0 0 3.75 12H5v1.5H3.75A3.75 3.75 0 0 1 0 9.75v-5zM12.25 15H11v-1.5h1.25a2.25 2.25 0 0 0 2.25-2.25v-5a.75.75 0 0 1 1.5 0v5A3.75 3.75 0 0 1 12.25 15z"/>
-    </svg>
-  );
-}
-
 function PlusCircleIcon({ isSaved }: { isSaved?: boolean }) {
   if (isSaved) {
     return (
@@ -86,42 +70,10 @@ function VolumeIcon({ volume }: { volume: number }) {
   );
 }
 
-function MicrophoneIcon() {
+function QueueIcon({ isActive }: { isActive?: boolean }) {
   return (
-    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-      <path d="M6.5 1A2.5 2.5 0 0 0 4 3.5v5a2.5 2.5 0 0 0 5 0v-5A2.5 2.5 0 0 0 6.5 1zm4 7.5A4 4 0 0 1 6.5 12.5 4 4 0 0 1 2.5 8.5H1A5.5 5.5 0 0 0 6 13.92V15h1v-1.08A5.5 5.5 0 0 0 12 8.5h-1.5z"/>
-    </svg>
-  );
-}
-
-function QueueIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+    <svg viewBox="0 0 16 16" fill="currentColor" className={`h-4 w-4 ${isActive ? 'text-[#1db954]' : 'text-[#b3b3b3] hover:text-white'} transition-colors`}>
       <path d="M15 15H1V13.5H15V15ZM15 9.5H1V8H15V9.5ZM15 4H1V2.5H15V4Z"/>
-    </svg>
-  );
-}
-
-function DevicesIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-      <path d="M6 2.75C6 1.784 6.784 1 7.75 1h6.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 14.25 15h-6.5A1.75 1.75 0 0 1 6 13.25V2.75zm1.75-.25a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h6.5a.25.25 0 0 0 .25-.25V2.75a.25.25 0 0 0-.25-.25h-6.5zM1 3.75C1 2.784 1.784 2 2.75 2H4v1.5H2.75a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25H4V14H2.75A1.75 1.75 0 0 1 1 12.25v-8.5z"/>
-    </svg>
-  );
-}
-
-function MiniplayerIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-      <path d="M16 3.5A1.5 1.5 0 0 0 14.5 2h-13A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9zM1.5 3.5h13v9h-13v-9zM8 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5v-4z"/>
-    </svg>
-  );
-}
-
-function FullscreenIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-      <path d="M6.53 9.47a.75.75 0 0 1 0 1.06l-2.72 2.72h2.44a.75.75 0 0 1 0 1.5H2.5a.75.75 0 0 1-.75-.75V10a.75.75 0 0 1 1.5 0v2.44l2.72-2.72a.75.75 0 0 1 1.06 0zm2.94-2.94a.75.75 0 0 1 0-1.06l2.72-2.72H9.75a.75.75 0 0 1 0-1.5h3.75a.75.75 0 0 1 .75.75V5.75a.75.75 0 0 1-1.5 0V3.31L10.53 6.03a.75.75 0 0 1-1.06 0z"/>
     </svg>
   );
 }
@@ -130,8 +82,8 @@ function FullscreenIcon() {
 
 export function PlayerBar() {
   const currentTrack = usePlayerStore((s) => s.currentTrack);
-  const isPlaying = usePlayerStore((s) => s.isPlaying);
   const currentTime = usePlayerStore((s) => s.currentTime);
+  const isPlaying = usePlayerStore((s) => s.isPlaying);
   const volume = usePlayerStore((s) => s.volume);
   const queue = usePlayerStore((s) => s.queue);
   const queueIndex = usePlayerStore((s) => s.queueIndex);
@@ -142,6 +94,8 @@ export function PlayerBar() {
   const setVolume = usePlayerStore((s) => s.setVolume);
   const toggleLibraryTrack = usePlayerStore((s) => s.toggleLibraryTrack);
   const library = usePlayerStore((s) => s.library);
+  const isQueueOpen = usePlayerStore((s) => s.isQueueOpen);
+  const toggleQueue = usePlayerStore((s) => s.toggleQueue);
 
   const seekRangeRef = useRef<HTMLInputElement>(null);
   const volRangeRef = useRef<HTMLInputElement>(null);
@@ -182,36 +136,33 @@ export function PlayerBar() {
             )}
           </div>
 
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white leading-snug hover:underline cursor-pointer">
-              {currentTrack?.title ?? 'Nothing playing'}
-            </p>
-            <p className="truncate text-xs text-[#a7a7a7] mt-0.5 hover:underline cursor-pointer">
-              {currentTrack?.artist ?? '—'}
-            </p>
-          </div>
+          <div className="flex items-center gap-3 min-w-0 max-w-full">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-white leading-snug hover:underline cursor-pointer">
+                {currentTrack?.title ?? 'Nothing playing'}
+              </p>
+              <p className="truncate text-xs text-[#a7a7a7] mt-0.5 hover:underline cursor-pointer">
+                {currentTrack?.artist ?? '—'}
+              </p>
+            </div>
 
-          {/* Plus/Save button */}
-          <button
-            type="button"
-            onClick={() => currentTrack && toggleLibraryTrack(currentTrack)}
-            disabled={!currentTrack}
-            className="shrink-0 p-1 disabled:opacity-30"
-            aria-label="Save to Library"
-          >
-            <PlusCircleIcon isSaved={isSaved} />
-          </button>
+            {/* Plus/Save button */}
+            <button
+              type="button"
+              onClick={() => currentTrack && toggleLibraryTrack(currentTrack)}
+              disabled={!currentTrack}
+              className="shrink-0 p-1 hover:scale-110 active:scale-95 transition-all disabled:opacity-30"
+              aria-label="Save to Library"
+            >
+              <PlusCircleIcon isSaved={isSaved} />
+            </button>
+          </div>
         </div>
 
         {/* ── Center: Controls + Progress ───────────────────── */}
         <div className="flex w-[40%] max-w-[722px] flex-col items-center gap-1.5">
           {/* Controls row */}
           <div className="flex items-center gap-4">
-            {/* Shuffle */}
-            <button type="button" className="text-[#b3b3b3] hover:text-white transition-colors p-1" aria-label="Shuffle">
-              <ShuffleIcon />
-            </button>
-
             {/* Skip back */}
             <button
               type="button"
@@ -244,11 +195,6 @@ export function PlayerBar() {
             >
               <SkipForwardIcon />
             </button>
-
-            {/* Repeat */}
-            <button type="button" className="text-[#b3b3b3] hover:text-white transition-colors p-1" aria-label="Repeat">
-              <RepeatIcon />
-            </button>
           </div>
 
           {/* Seek progress bar */}
@@ -274,16 +220,19 @@ export function PlayerBar() {
           </div>
         </div>
 
-        {/* ── Right: Volume & Extras ────────────────────────── */}
+        {/* ── Right: Controls & Volume ───────────────────────── */}
         <div className="flex w-[30%] min-w-[180px] items-center justify-end gap-3 text-[#b3b3b3]">
-          <button type="button" className="hover:text-white transition-colors p-1" aria-label="Lyrics">
-            <MicrophoneIcon />
-          </button>
-          <button type="button" className="hover:text-white transition-colors p-1" aria-label="Queue">
-            <QueueIcon />
-          </button>
-          <button type="button" className="hover:text-white transition-colors p-1" aria-label="Connect to a device">
-            <DevicesIcon />
+          {/* Queue toggle button */}
+          <button
+            type="button"
+            onClick={toggleQueue}
+            className={`p-1.5 rounded transition-all hover:scale-105 active:scale-95 ${
+              isQueueOpen ? 'text-[#1db954] bg-white/10' : 'text-[#b3b3b3] hover:text-white'
+            }`}
+            title="Queue"
+            aria-label="Queue"
+          >
+            <QueueIcon isActive={isQueueOpen} />
           </button>
 
           {/* Volume container */}
@@ -303,13 +252,6 @@ export function PlayerBar() {
               aria-label="Volume"
             />
           </div>
-
-          <button type="button" className="hover:text-white transition-colors p-1" aria-label="Miniplayer">
-            <MiniplayerIcon />
-          </button>
-          <button type="button" className="hover:text-white transition-colors p-1" aria-label="Full screen">
-            <FullscreenIcon />
-          </button>
         </div>
 
       </div>

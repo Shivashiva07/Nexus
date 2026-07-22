@@ -1,44 +1,12 @@
 'use client';
 
+import logoImg from '../../public/logo.png';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { usePlayerStore, LIKED_SONGS_ID } from '@/store/usePlayerStore';
-import { TrackRow } from '@/components/TrackRow';
-import { redirectToSpotifyAuthorize } from '@/lib/spotifyAuth';
+import { CreatePlaylistModal } from '@/components/LibraryPanel';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
-
-function SpotifyIcon({ className = 'h-4 w-4' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-    </svg>
-  );
-}
-
-function HomeIcon({ filled = false }: { filled?: boolean }) {
-  return filled ? (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 shrink-0">
-      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-    </svg>
-  ) : (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-6 w-6 shrink-0">
-      <path strokeLinejoin="round" d="M3 12l9-9 9 9v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9z"/>
-    </svg>
-  );
-}
-
-function SearchIconBig({ filled = false }: { filled?: boolean }) {
-  return filled ? (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 shrink-0">
-      <path d="M23.384 21.619l-5.794-5.794a9.636 9.636 0 10-1.768 1.768l5.794 5.794a1.25 1.25 0 001.768-1.768zM2.5 11.137A8.637 8.637 0 1111.137 19.773 8.646 8.646 0 012.5 11.137z"/>
-    </svg>
-  ) : (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-6 w-6 shrink-0">
-      <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="m21 21-4.35-4.35"/>
-    </svg>
-  );
-}
 
 function LibraryIconBig() {
   return (
@@ -56,18 +24,18 @@ function PlusIcon() {
   );
 }
 
-function ArrowRightIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
-    </svg>
-  );
-}
-
 function ArrowLeftIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
       <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6"/>
+    </svg>
+  );
+}
+
+function TrashIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
     </svg>
   );
 }
@@ -114,21 +82,18 @@ export function Sidebar() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Store
-  const queue = usePlayerStore((s) => s.queue);
-  const queueIndex = usePlayerStore((s) => s.queueIndex);
-  const currentTrack = usePlayerStore((s) => s.currentTrack);
-  const setQueue = usePlayerStore((s) => s.setQueue);
-  const library = usePlayerStore((s) => s.library);
   const playlists = usePlayerStore((s) => s.playlists);
   const createPlaylist = usePlayerStore((s) => s.createPlaylist);
+  const deletePlaylist = usePlayerStore((s) => s.deletePlaylist);
   const activeView = usePlayerStore((s) => s.activeView);
   const setActiveView = usePlayerStore((s) => s.setActiveView);
   const activePlaylistId = usePlayerStore((s) => s.activePlaylistId);
   const setActivePlaylistId = usePlayerStore((s) => s.setActivePlaylistId);
-  const isSpotifyPremium = usePlayerStore((s) => s.isSpotifyPremium);
-  const spotifyAccessToken = usePlayerStore((s) => s.spotifyAccessToken);
-  const setSpotifyAccessToken = usePlayerStore((s) => s.setSpotifyAccessToken);
-  const setSpotifyPremium = usePlayerStore((s) => s.setSpotifyPremium);
+  const library = usePlayerStore((s) => s.library);
+
+  const [sidebarWidth, setSidebarWidth] = useState(280);
+  const [isResizing, setIsResizing] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -136,17 +101,45 @@ export function Sidebar() {
     if (showSearch) searchInputRef.current?.focus();
   }, [showSearch]);
 
+  const startResizing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const newWidth = moveEvent.clientX;
+      if (newWidth < 150) {
+        setIsCollapsed(true);
+      } else {
+        setIsCollapsed(false);
+        setSidebarWidth(Math.min(Math.max(newWidth, 200), 500));
+      }
+    };
+
+    const onMouseUp = () => {
+      setIsResizing(false);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
   const filteredPlaylists = searchQuery.trim()
     ? playlists.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : playlists;
 
-  function handleCreate() {
-    const id = createPlaylist(`My Playlist #${playlists.length + 1}`);
+  function handleCreate(name: string, description?: string) {
+    const id = createPlaylist(name, description || undefined);
     setActiveView('library');
     setActivePlaylistId(id);
+    setShowCreateModal(false);
   }
 
-  const isHomeActive = activeView === 'search';
   const likedActive = activePlaylistId === LIKED_SONGS_ID && activeView === 'library';
 
   // ─── Collapsed sidebar ───────────────────────────────────────────────────────
@@ -155,10 +148,8 @@ export function Sidebar() {
       <aside className="flex h-full w-[72px] shrink-0 flex-col bg-[#000000] py-2 gap-1">
         {/* Nexus logo */}
         <div className="flex items-center justify-center px-3 py-3 mb-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-700 shadow-lg">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-white">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
+          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg bg-white/[0.05] border border-white/[0.08] shadow-md">
+            <Image src={logoImg} alt="Nexus Logo" className="h-full w-full object-cover" />
           </div>
         </div>
 
@@ -211,59 +202,16 @@ export function Sidebar() {
         })}
 
         <div className="mt-auto" />
-
-        {/* Spotify icon */}
-        {mounted && (
-          <div className="flex justify-center px-2 pb-3">
-            {spotifyAccessToken ? (
-              <button
-                type="button"
-                title="Spotify Connected"
-                onClick={() => { setSpotifyAccessToken(null); setSpotifyPremium(false); }}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1db954] text-black transition-all hover:scale-105"
-              >
-                <SpotifyIcon className="h-4 w-4" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                title="Connect Spotify"
-                onClick={() => redirectToSpotifyAuthorize()}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#282828] text-[#b3b3b3] hover:text-white transition-all"
-              >
-                <SpotifyIcon className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        )}
       </aside>
     );
   }
 
   // ─── Expanded sidebar ─────────────────────────────────────────────────────────
   return (
-    <aside className="flex h-full w-[280px] shrink-0 flex-col bg-[#000000] overflow-hidden">
-
-      {/* ── Top Header (Logo) ─────────────────────────────── */}
-      <div className="bg-[#121212] rounded-lg mx-2 mt-2 mb-2 px-4 py-3.5 flex-shrink-0 flex items-center justify-between">
-        {/* Logo (clickable to return to Discover/Search) */}
-        <button
-          type="button"
-          onClick={() => { setActiveView('search'); setActivePlaylistId(null); }}
-          className="flex items-center gap-3 text-left group"
-          title="Back to Discover / Search"
-        >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-700 shadow-lg group-hover:scale-105 transition-transform">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 text-white">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-sm font-bold text-white leading-none">Nexus</h1>
-            <p className="text-[10px] text-[#a7a7a7] mt-0.5 leading-none">Multi-Platform Player</p>
-          </div>
-        </button>
-      </div>
+    <aside
+      style={{ width: `${sidebarWidth}px` }}
+      className="relative flex h-full shrink-0 flex-col bg-[#000000] overflow-hidden p-2 select-none group/sidebar"
+    >
 
       {/* ── Your Library ────────────────────────────────────────── */}
       <div className="bg-[#121212] rounded-lg mx-2 flex-1 overflow-hidden flex flex-col">
@@ -281,7 +229,7 @@ export function Sidebar() {
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={handleCreate}
+              onClick={() => setShowCreateModal(true)}
               title="Create playlist"
               className="flex h-8 w-8 items-center justify-center rounded-full text-[#b3b3b3] hover:text-white hover:bg-[#2a2a2a] transition-all"
             >
@@ -300,30 +248,15 @@ export function Sidebar() {
 
         {/* Filter pills */}
         <div className="flex gap-2 px-4 pb-3 flex-shrink-0">
-          <button
-            type="button"
-            className="rounded-full bg-white text-black text-xs font-semibold px-3 py-1.5 transition-all"
-          >
+          <span className="rounded-full bg-white text-black text-xs font-semibold px-3.5 py-1 transition-all">
             Playlists
-          </button>
-          <button
-            type="button"
-            className="rounded-full bg-[#2a2a2a] text-white text-xs font-semibold px-3 py-1.5 hover:bg-[#3a3a3a] transition-all"
-          >
-            Artists
-          </button>
-          <button
-            type="button"
-            className="rounded-full bg-[#2a2a2a] text-white text-xs font-semibold px-3 py-1.5 hover:bg-[#3a3a3a] transition-all"
-          >
-            Albums
-          </button>
+          </span>
         </div>
 
-        {/* Search + Recents row */}
+        {/* Search row */}
         <div className="flex items-center justify-between px-4 pb-2 flex-shrink-0">
           {showSearch ? (
-            <div className="flex flex-1 items-center gap-2 rounded bg-[#2a2a2a] px-3 py-2 mr-2">
+            <div className="flex flex-1 items-center gap-2 rounded bg-[#2a2a2a] px-3 py-2">
               <SearchSmallIcon />
               <input
                 ref={searchInputRef}
@@ -345,13 +278,6 @@ export function Sidebar() {
               <SearchSmallIcon />
             </button>
           )}
-          <button
-            type="button"
-            className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-[#b3b3b3] hover:text-white transition-colors ml-auto"
-          >
-            Recents
-            <ListIcon />
-          </button>
         </div>
 
         {/* Playlist list — scrollable */}
@@ -379,30 +305,47 @@ export function Sidebar() {
             const artwork = p.tracks.find((t) => t.artwork)?.artwork;
             const isActive = activePlaylistId === p.id && activeView === 'library';
             return (
-              <button
+              <div
                 key={p.id}
-                type="button"
                 onClick={() => { setActiveView('library'); setActivePlaylistId(p.id); }}
-                className={`flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-all hover:bg-[#1a1a1a] ${isActive ? 'bg-[#2a2a2a]' : ''}`}
+                className={`group flex w-full items-center justify-between rounded-md px-2 py-2 text-left transition-all hover:bg-[#1a1a1a] cursor-pointer ${isActive ? 'bg-[#2a2a2a]' : ''}`}
               >
-                <div className="h-12 w-12 shrink-0 rounded overflow-hidden bg-[#282828]">
-                  {artwork ? (
-                    <Image src={artwork} alt={p.name} width={48} height={48} className="object-cover w-full h-full" />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center">
-                      <MusicNoteIcon />
-                    </div>
-                  )}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="h-12 w-12 shrink-0 rounded overflow-hidden bg-[#282828]">
+                    {artwork ? (
+                      <Image src={artwork} alt={p.name} width={48} height={48} className="object-cover w-full h-full" />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center">
+                        <MusicNoteIcon />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`truncate text-sm font-normal leading-snug ${isActive ? 'text-violet-400' : 'text-white'}`}>
+                      {p.name}
+                    </p>
+                    <p className="truncate text-xs text-[#a7a7a7] mt-0.5">
+                      Playlist · {p.tracks.length} songs
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className={`truncate text-sm font-normal leading-snug ${isActive ? 'text-violet-400' : 'text-white'}`}>
-                    {p.name}
-                  </p>
-                  <p className="truncate text-xs text-[#a7a7a7] mt-0.5">
-                    Playlist · {p.tracks.length} songs
-                  </p>
-                </div>
-              </button>
+
+                {/* Remove from Library / Delete Button */}
+                <button
+                  type="button"
+                  title="Remove from Library"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (activePlaylistId === p.id) {
+                      setActivePlaylistId(null);
+                    }
+                    deletePlaylist(p.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full text-[#a7a7a7] hover:text-red-400 hover:bg-white/10 transition-all shrink-0 ml-1"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              </div>
             );
           })}
 
@@ -416,7 +359,7 @@ export function Sidebar() {
               <p className="text-xs text-[#a7a7a7] mb-3">It&apos;s easy, we&apos;ll help you</p>
               <button
                 type="button"
-                onClick={handleCreate}
+                onClick={() => setShowCreateModal(true)}
                 className="rounded-full bg-white text-black text-xs font-bold px-4 py-1.5 hover:scale-105 transition-all"
               >
                 Create playlist
@@ -426,47 +369,35 @@ export function Sidebar() {
 
 
         </div>
-
-        {/* ── Spotify Connection ─────────────────────────────────── */}
-        {mounted && (
-          <div className="flex-shrink-0 border-t border-white/[0.07] px-3 py-3">
-            {spotifyAccessToken ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1db954]">
-                    <SpotifyIcon className="h-4 w-4 text-black" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-white leading-none">Spotify</p>
-                    <p className="text-[10px] text-[#a7a7a7] mt-0.5 leading-none">
-                      {isSpotifyPremium ? 'Premium' : 'Free'}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { setSpotifyAccessToken(null); setSpotifyPremium(false); }}
-                  className="text-[10px] text-[#a7a7a7] hover:text-white transition-colors"
-                >
-                  Disconnect
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => redirectToSpotifyAuthorize()}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-[#1db954] px-4 py-2.5 text-xs font-bold text-black hover:bg-[#1ed760] hover:scale-[1.02] transition-all active:scale-95"
-              >
-                <SpotifyIcon className="h-3.5 w-3.5 text-black" />
-                Connect Spotify
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Bottom padding */}
       <div className="h-2" />
+
+      {/* ── Drag Resize Handle ──────────────────────────────────── */}
+      <div
+        onMouseDown={startResizing}
+        onDoubleClick={() => {
+          setIsCollapsed(false);
+          setSidebarWidth(280);
+        }}
+        className={`absolute right-0 top-0 bottom-0 w-2.5 cursor-col-resize z-30 flex items-center justify-center transition-all ${
+          isResizing ? 'bg-violet-500/40' : 'hover:bg-white/20 active:bg-violet-500/40'
+        }`}
+        title="Drag to resize sidebar (Double-click to reset width)"
+      >
+        <div className={`h-10 w-1 rounded-full transition-colors ${
+          isResizing ? 'bg-violet-400' : 'bg-white/20 group-hover/sidebar:bg-white/50'
+        }`} />
+      </div>
+
+      {/* ── Create Playlist Modal ───────────────────────────────── */}
+      {showCreateModal && (
+        <CreatePlaylistModal
+          onClose={() => setShowCreateModal(false)}
+          onCreate={handleCreate}
+        />
+      )}
     </aside>
   );
 }

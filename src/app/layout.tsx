@@ -21,6 +21,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Nexus — Multi-Platform Music Player",
   description: "Nexus: unified search, queueing, and playback across Spotify, YouTube, SoundCloud, and VS Nectar.",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({

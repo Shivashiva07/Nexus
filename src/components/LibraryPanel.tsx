@@ -118,15 +118,19 @@ function PlaylistArtwork({ tracks, isLikedSongs = false, size = 'md' }: {
 
 // ─── Create Playlist Modal ───────────────────────────────────────────────────
 
-function CreatePlaylistModal({ onClose, onCreate }: {
+export function CreatePlaylistModal({ onClose, onCreate }: {
   onClose: () => void;
   onCreate: (name: string, description: string) => void;
 }) {
-  const [name, setName] = useState('');
+  const playlists = usePlayerStore((s) => s.playlists);
+  const [name, setName] = useState(`My Playlist #${playlists.length + 1}`);
   const [desc, setDesc] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -408,6 +412,22 @@ function PlaylistDetailView({ playlistId, onBack }: {
             <PlayIcon />
           </button>
 
+          {/* Direct Remove from Library button */}
+          {!isLiked && (
+            <button
+              type="button"
+              onClick={() => {
+                deletePlaylist(playlistId);
+                onBack();
+              }}
+              className="flex items-center gap-2 rounded-full border border-white/10 px-3.5 py-1.5 text-xs font-semibold text-white/70 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all"
+              title="Remove playlist from library"
+            >
+              <TrashIcon />
+              <span>Remove from Library</span>
+            </button>
+          )}
+
           {/* Three-dot menu (only for user playlists) */}
           {!isLiked && (
             <div className="relative" ref={menuRef}>
@@ -432,7 +452,7 @@ function PlaylistDetailView({ playlistId, onBack }: {
                     onClick={() => { deletePlaylist(playlistId); onBack(); }}
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-950/30 transition-colors"
                   >
-                    <TrashIcon /> Delete playlist
+                    <TrashIcon /> Remove from Library
                   </button>
                 </div>
               )}

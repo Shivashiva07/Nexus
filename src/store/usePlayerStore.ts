@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import type { AggregatedSearchResult } from '@/lib/api/types';
 
 export type MusicSource = 'spotify' | 'youtube' | 'soundcloud' | 'vsnectar';
 
@@ -41,6 +42,18 @@ interface PlayerState {
   activeView: 'search' | 'library';
   activePlaylistId: string | null; // null = grid, LIKED_SONGS_ID or playlist.id = detail
 
+  searchQuery: string;
+  searchResults: AggregatedSearchResult | null;
+  isSearching: boolean;
+  searchError: string | null;
+  searchTab: string;
+  setSearchQuery: (query: string) => void;
+  setSearchResults: (results: AggregatedSearchResult | null) => void;
+  setIsSearching: (isSearching: boolean) => void;
+  setSearchError: (error: string | null) => void;
+  setSearchTab: (tab: string) => void;
+  resetSearch: () => void;
+
   recentSearches: string[];
   setTrack: (track: Track) => void;
   setQueue: (tracks: Track[], startIndex?: number) => void;
@@ -69,6 +82,23 @@ interface PlayerState {
   renamePlaylist: (id: string, name: string) => void;
   addTrackToPlaylist: (playlistId: string, track: Track) => void;
   removeTrackFromPlaylist: (playlistId: string, trackId: string) => void;
+  // Queue management
+  isQueueOpen: boolean;
+  toggleQueue: () => void;
+  setIsQueueOpen: (open: boolean) => void;
+  addToQueue: (track: Track) => void;
+  removeFromQueue: (index: number) => void;
+  clearQueue: () => void;
+  playQueueIndex: (index: number) => void;
+  toastMessage: string | null;
+  showToast: (msg: string | null) => void;
+
+  // Cloud Sync
+  firebaseUser: string | null;
+  setFirebaseUser: (uid: string | null) => void;
+  setLibraryFromCloud: (tracks: Track[]) => void;
+  setPlaylistsFromCloud: (playlists: Playlist[]) => void;
+  setRecentSearchesFromCloud: (searches: string[]) => void;
 }
 
 
@@ -89,7 +119,92 @@ export const usePlayerStore = create<PlayerState>()(
       playlists: [],
       activeView: 'search',
       activePlaylistId: null,
-      setTrack: (track) => set({ currentTrack: track, isPlaying: true, currentTime: 0 }),
+      firebaseUser: null,
+      setFirebaseUser: (uid) => set({ firebaseUser: uid }),
+      setLibraryFromCloud: (tracks) => set({ library: tracks }),
+      setPlaylistsFromCloud: (playlists) => set({ playlists }),
+      setRecentSearchesFromCloud: (searches) => set({ recentSearches: searches }),
+
+      searchQuery: '',
+      searchResults: null,
+      isSearching: false,
+      searchError: null,
+      searchTab: 'all',
+      setSearchQuery: (query) => set({ searchQuery: query }),
+      setSearchResults: (results) => set({ searchResults: results }),
+      setIsSearching: (isSearching) => set({ isSearching }),
+      setSearchError: (searchError) => set({ searchError }),
+      setSearchTab: (tab) => set({ searchTab: tab }),
+      resetSearch: () => set({ searchQuery: '', searchResults: null, searchError: null, searchTab: 'all', activeView: 'search', activePlaylistId: null }),
+      isQueueOpen: false,
+      toggleQueue: () => set((state) => ({ isQueueOpen: !state.isQueueOpen })),
+      setIsQueueOpen: (open) => set({ isQueueOpen: open }),
+      addToQueue: (track) => {
+        const { queue, queueIndex, currentTrack } = get();
+        if (!currentTrack || queue.length === 0) {
+          set({
+            queue: [track],
+            queueIndex: 0,
+            currentTrack: track,
+            isPlaying: true,
+            currentTime: 0,
+            toastMessage: `Added to Queue: ${track.title}`
+          });
+        } else {
+          set({
+            queue: [...queue, track],
+            toastMessage: `Added to Queue: ${track.title}`
+          });
+        }
+      },
+      removeFromQueue: (targetIndex) => {
+        set((state) => {
+          const newQueue = state.queue.filter((_, idx) => idx !== targetIndex);
+          let newIndex = state.queueIndex;
+          if (targetIndex < state.queueIndex) {
+            newIndex = Math.max(0, state.queueIndex - 1);
+          } else if (targetIndex === state.queueIndex && newQueue.length > 0) {
+            newIndex = Math.min(newIndex, newQueue.length - 1);
+          }
+          return {
+            queue: newQueue,
+            queueIndex: newIndex,
+            currentTrack: newQueue[newIndex] || null
+          };
+        });
+      },
+      clearQueue: () => {
+        set((state) => {
+          if (!state.currentTrack) return { queue: [], queueIndex: 0 };
+          return {
+            queue: [state.currentTrack],
+            queueIndex: 0
+          };
+        });
+      },
+      playQueueIndex: (index) => {
+        const { queue } = get();
+        if (queue[index]) {
+          set({
+            queueIndex: index,
+            currentTrack: queue[index],
+            isPlaying: true,
+            currentTime: 0
+          });
+        }
+      },
+      toastMessage: null,
+      showToast: (msg) => set({ toastMessage: msg }),
+
+      setTrack: (track) => {
+        const { queue, queueIndex } = get();
+        if (queue.length === 0) {
+          set({ queue: [track], queueIndex: 0, currentTrack: track, isPlaying: true, currentTime: 0 });
+        } else {
+          const newQueue = [...queue.slice(0, queueIndex + 1), track, ...queue.slice(queueIndex + 1)];
+          set({ queue: newQueue, queueIndex: queueIndex + 1, currentTrack: track, isPlaying: true, currentTime: 0 });
+        }
+      },
       setQueue: (tracks, startIndex = 0) => set({
         queue: tracks,
         queueIndex: startIndex,
