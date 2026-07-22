@@ -1,6 +1,6 @@
 'use client';
 
-import { usePlayerStore } from '@/store/usePlayerStore';
+import { usePlayerStore, type Track } from '@/store/usePlayerStore';
 
 function CloseIcon() {
   return (

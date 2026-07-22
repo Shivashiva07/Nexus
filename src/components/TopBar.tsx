@@ -132,7 +132,7 @@ export function TopBar() {
         title="Nexus - Return to Home"
       >
         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white/[0.05] border border-white/[0.08] shadow-md group-hover:scale-105 transition-transform">
-          <img src="/logo.png" alt="Nexus Logo" className="h-full w-full object-cover" />
+          <Image src={logoImg} alt="Nexus Logo" className="h-full w-full object-cover" />
         </div>
         <div>
           <h1 className="text-base font-bold text-white leading-tight tracking-tight">Nexus</h1>

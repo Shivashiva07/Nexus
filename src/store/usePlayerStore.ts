@@ -140,7 +140,7 @@ export const usePlayerStore = create<PlayerState>()(
       toggleQueue: () => set((state) => ({ isQueueOpen: !state.isQueueOpen })),
       setIsQueueOpen: (open) => set({ isQueueOpen: open }),
       addToQueue: (track) => {
-        const { queue, currentTrack } = get();
+        const { queue, queueIndex, currentTrack } = get();
         if (!currentTrack || queue.length === 0) {
           set({
             queue: [track],
