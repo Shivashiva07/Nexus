@@ -138,7 +138,7 @@ export function Sidebar() {
         {/* Nexus logo */}
         <div className="flex items-center justify-center px-3 py-3 mb-3">
           <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg bg-white/[0.05] border border-white/[0.08] shadow-md">
-            <Image src={logoImg} alt="Nexus Logo" className="h-full w-full object-cover" />
+            <img src="/logo.png" alt="Nexus Logo" className="h-full w-full object-cover" />
           </div>
         </div>
 
