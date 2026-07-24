@@ -6,6 +6,7 @@ import {
   auth,
   googleProvider,
   signInWithPopup,
+  signInWithRedirect,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from '@/lib/firebase';
@@ -38,11 +39,12 @@ export function AuthModal() {
       showToast('Signed in with Google! Cloud sync active.');
       closeModal();
     } catch (err: unknown) {
-      console.error('Google Sign-In error:', err);
-      const msg = err instanceof Error ? err.message : 'Google sign in failed.';
-      if (msg.includes('popup-blocked')) {
-        setError('Pop-up blocked by browser. Please allow pop-ups for this site, or use Email registration below.');
-      } else {
+      console.warn('Google Sign-In popup failed, attempting redirect fallback...', err);
+      try {
+        await signInWithRedirect(auth, googleProvider);
+      } catch (redirectErr: unknown) {
+        console.error('Google Redirect Auth error:', redirectErr);
+        const msg = redirectErr instanceof Error ? redirectErr.message : 'Google sign in failed.';
         setError(msg.replace('Firebase: ', ''));
       }
     } finally {
