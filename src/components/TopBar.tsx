@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { usePlayerStore } from '@/store/usePlayerStore';
 import { fetchAggregatedSearch } from '@/lib/api/client';
 import { redirectToSpotifyAuthorize } from '@/lib/spotifyAuth';
+import { auth, signOut } from '@/lib/firebase';
 
 function SpotifyIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
@@ -34,6 +35,13 @@ export function TopBar() {
   const addRecentSearch = usePlayerStore((s) => s.addRecentSearch);
   const removeRecentSearch = usePlayerStore((s) => s.removeRecentSearch);
   const clearRecentSearches = usePlayerStore((s) => s.clearRecentSearches);
+
+  // User Auth & Cloud Sync Store
+  const setAuthModalOpen = usePlayerStore((s) => s.setAuthModalOpen);
+  const userEmail = usePlayerStore((s) => s.userEmail);
+  const userDisplayName = usePlayerStore((s) => s.userDisplayName);
+  const isAnonymousUser = usePlayerStore((s) => s.isAnonymousUser);
+  const showToast = usePlayerStore((s) => s.showToast);
 
   useEffect(() => {
     setMounted(true);
@@ -241,41 +249,84 @@ export function TopBar() {
         </div>
       </div>
 
-      {/* ── Right: Spotify Connection ────────────────────────────── */}
-      <div className="flex items-center shrink-0">
+      {/* ── Right: User Account / Cloud Sync & Spotify Connection ────────────────────────────── */}
+      <div className="flex items-center gap-3 shrink-0">
         {mounted && (
-          spotifyAccessToken ? (
-            <div className="flex items-center gap-3 rounded-full bg-[#181818] border border-white/[0.08] px-3.5 py-1.5 shadow-sm">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1db954] shrink-0">
-                  <SpotifyIcon className="h-3.5 w-3.5 text-black" />
+          <>
+            {/* Cloud Sync Account Button */}
+            {!isAnonymousUser && userEmail ? (
+              <div className="flex items-center gap-2.5 rounded-full bg-[#181818] border border-indigo-500/30 px-3 py-1.5 shadow-sm">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 text-white font-bold text-xs shrink-0">
+                  {userDisplayName ? userDisplayName[0].toUpperCase() : userEmail[0].toUpperCase()}
                 </div>
                 <div className="flex flex-col text-left">
-                  <p className="text-xs font-semibold text-white leading-none">Spotify</p>
-                  <p className="text-[10px] text-[#a7a7a7] mt-0.5 leading-none">
-                    {isSpotifyPremium ? 'Premium' : 'Free'}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-semibold text-white leading-none max-w-[100px] truncate">
+                      {userDisplayName || userEmail.split('@')[0]}
+                    </p>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="Cloud Synced" />
+                  </div>
+                  <p className="text-[9px] text-emerald-400/80 leading-none mt-0.5 font-medium">Cloud Synced</p>
                 </div>
+                <div className="h-3 w-px bg-white/10 mx-0.5" />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await signOut(auth);
+                    showToast('Signed out of cloud account');
+                  }}
+                  className="text-[11px] font-medium text-white/50 hover:text-red-400 transition-colors"
+                >
+                  Sign Out
+                </button>
               </div>
-              <div className="h-3 w-px bg-white/10 mx-0.5" />
+            ) : (
               <button
                 type="button"
-                onClick={() => { setSpotifyAccessToken(null); setSpotifyPremium(false); }}
-                className="text-[11px] font-medium text-[#a7a7a7] hover:text-white transition-colors"
+                onClick={() => setAuthModalOpen(true)}
+                className="flex items-center gap-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 px-3.5 py-1.5 text-xs font-semibold text-white transition-all active:scale-95 shadow-sm"
               >
-                Disconnect
+                <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Sync Library
               </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => redirectToSpotifyAuthorize()}
-              className="flex items-center gap-2 rounded-full bg-[#1db954] px-4 py-2 text-xs font-bold text-black hover:bg-[#1ed760] hover:scale-[1.02] transition-all active:scale-95 shadow-md shadow-[#1db954]/20"
-            >
-              <SpotifyIcon className="h-3.5 w-3.5 text-black" />
-              Connect Spotify
-            </button>
-          )
+            )}
+
+            {/* Spotify Connection */}
+            {spotifyAccessToken ? (
+              <div className="flex items-center gap-3 rounded-full bg-[#181818] border border-white/[0.08] px-3.5 py-1.5 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1db954] shrink-0">
+                    <SpotifyIcon className="h-3.5 w-3.5 text-black" />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <p className="text-xs font-semibold text-white leading-none">Spotify</p>
+                    <p className="text-[10px] text-[#a7a7a7] mt-0.5 leading-none">
+                      {isSpotifyPremium ? 'Premium' : 'Free'}
+                    </p>
+                  </div>
+                </div>
+                <div className="h-3 w-px bg-white/10 mx-0.5" />
+                <button
+                  type="button"
+                  onClick={() => { setSpotifyAccessToken(null); setSpotifyPremium(false); }}
+                  className="text-[11px] font-medium text-[#a7a7a7] hover:text-white transition-colors"
+                >
+                  Disconnect
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => redirectToSpotifyAuthorize()}
+                className="flex items-center gap-2 rounded-full bg-[#1db954] px-4 py-2 text-xs font-bold text-black hover:bg-[#1ed760] hover:scale-[1.02] transition-all active:scale-95 shadow-md shadow-[#1db954]/20"
+              >
+                <SpotifyIcon className="h-3.5 w-3.5 text-black" />
+                Connect Spotify
+              </button>
+            )}
+          </>
         )}
       </div>
     </header>

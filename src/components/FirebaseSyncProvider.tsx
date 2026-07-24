@@ -40,6 +40,7 @@ function mergeTracks(local: Track[], cloud: Track[]): Track[] {
 
 export function FirebaseSyncProvider({ children }: { children: React.ReactNode }) {
   const setFirebaseUser = usePlayerStore((s) => s.setFirebaseUser);
+  const setUserProfile = usePlayerStore((s) => s.setUserProfile);
   const setLibraryFromCloud = usePlayerStore((s) => s.setLibraryFromCloud);
   const setPlaylistsFromCloud = usePlayerStore((s) => s.setPlaylistsFromCloud);
   const setRecentSearchesFromCloud = usePlayerStore((s) => s.setRecentSearchesFromCloud);
@@ -70,10 +71,23 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
     const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
       if (user) {
         setFirebaseUser(user.uid);
+        setUserProfile({
+          userEmail: user.email,
+          userDisplayName: user.displayName,
+          userPhotoURL: user.photoURL,
+          isAnonymousUser: user.isAnonymous,
+        });
       } else {
+        setUserProfile(null);
         try {
           const cred = await signInAnonymously(auth);
           setFirebaseUser(cred.user.uid);
+          setUserProfile({
+            userEmail: cred.user.email,
+            userDisplayName: cred.user.displayName,
+            userPhotoURL: cred.user.photoURL,
+            isAnonymousUser: cred.user.isAnonymous,
+          });
         } catch (err) {
           console.warn('Firebase anonymous auth failed:', err);
         }
@@ -81,7 +95,7 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
     });
 
     return () => unsubscribe();
-  }, [setFirebaseUser]);
+  }, [setFirebaseUser, setUserProfile]);
 
   // 2. Attach Firestore Realtime Listener & Merge Cloud Data
   useEffect(() => {

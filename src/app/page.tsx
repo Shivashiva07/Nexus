@@ -9,6 +9,7 @@ import { Toast } from '@/components/Toast';
 import { PlayerBar } from '@/components/PlayerBar';
 import { DynamicMediaDock } from '@/components/DynamicMediaDock';
 import { FirebaseSyncProvider } from '@/components/FirebaseSyncProvider';
+import { AuthModal } from '@/components/AuthModal';
 import { usePlayerStore } from '@/store/usePlayerStore';
 
 export default function Home() {
@@ -30,6 +31,7 @@ export default function Home() {
         <PlayerBar />
         <DynamicMediaDock />
         <Toast />
+        <AuthModal />
       </div>
     </FirebaseSyncProvider>
   );

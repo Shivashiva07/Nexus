@@ -93,8 +93,15 @@ interface PlayerState {
   toastMessage: string | null;
   showToast: (msg: string | null) => void;
 
-  // Cloud Sync
+  // Cloud Sync & User Profile
   firebaseUser: string | null;
+  userEmail: string | null;
+  userDisplayName: string | null;
+  userPhotoURL: string | null;
+  isAnonymousUser: boolean;
+  isAuthModalOpen: boolean;
+  setAuthModalOpen: (open: boolean) => void;
+  setUserProfile: (profile: { userEmail: string | null; userDisplayName: string | null; userPhotoURL: string | null; isAnonymousUser: boolean } | null) => void;
   setFirebaseUser: (uid: string | null) => void;
   setLibraryFromCloud: (tracks: Track[]) => void;
   setPlaylistsFromCloud: (playlists: Playlist[]) => void;
@@ -120,6 +127,28 @@ export const usePlayerStore = create<PlayerState>()(
       activeView: 'search',
       activePlaylistId: null,
       firebaseUser: null,
+      userEmail: null,
+      userDisplayName: null,
+      userPhotoURL: null,
+      isAnonymousUser: true,
+      isAuthModalOpen: false,
+      setAuthModalOpen: (open) => set({ isAuthModalOpen: open }),
+      setUserProfile: (profile) =>
+        set(
+          profile
+            ? {
+                userEmail: profile.userEmail,
+                userDisplayName: profile.userDisplayName,
+                userPhotoURL: profile.userPhotoURL,
+                isAnonymousUser: profile.isAnonymousUser,
+              }
+            : {
+                userEmail: null,
+                userDisplayName: null,
+                userPhotoURL: null,
+                isAnonymousUser: true,
+              }
+        ),
       setFirebaseUser: (uid) => set({ firebaseUser: uid }),
       setLibraryFromCloud: (tracks) => set({ library: tracks }),
       setPlaylistsFromCloud: (playlists) => set({ playlists }),
