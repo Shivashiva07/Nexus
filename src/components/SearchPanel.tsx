@@ -122,6 +122,8 @@ export function SearchPanel() {
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const setQueue = usePlayerStore((s) => s.setQueue);
   const spotifyAccessToken = usePlayerStore((s) => s.spotifyAccessToken);
+  const setSpotifyAccessToken = usePlayerStore((s) => s.setSpotifyAccessToken);
+  const setSpotifyPremium = usePlayerStore((s) => s.setSpotifyPremium);
   const recentSearches = usePlayerStore((s) => s.recentSearches);
   const addRecentSearch = usePlayerStore((s) => s.addRecentSearch);
 
@@ -182,6 +184,10 @@ export function SearchPanel() {
     setActiveTab('all');
     try {
       const data = await fetchAggregatedSearch(trimmed, spotifyAccessToken);
+      if (data.errors.spotify?.includes('401') || data.errors.spotify?.includes('expired')) {
+        setSpotifyAccessToken(null);
+        setSpotifyPremium(false);
+      }
       setResults(data);
     } catch (error) {
       setSearchError(error instanceof Error ? error.message : 'Search failed.');

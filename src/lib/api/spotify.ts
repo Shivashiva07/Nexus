@@ -49,47 +49,8 @@ interface SpotifyTrackItem {
   album: { images: Array<{ url: string }> };
 }
 
-export async function searchSpotify(query: string, userToken?: string | null, limit = 50): Promise<Track[]> {
-  let token: string;
-  if (userToken) {
-    token = userToken;
-  } else {
-    token = await getClientCredentialsToken();
-  }
-
-  const params = new URLSearchParams({ q: query, type: 'track', limit: String(limit) });
-  let response = await fetch(`https://api.spotify.com/v1/search?${params.toString()}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store',
-  });
-
-  if (!response.ok && userToken) {
-    try {
-      const fallbackToken = await getClientCredentialsToken();
-      const fallbackResponse = await fetch(`https://api.spotify.com/v1/search?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${fallbackToken}` },
-        cache: 'no-store',
-      });
-      if (fallbackResponse.ok) {
-        response = fallbackResponse;
-      }
-    } catch {
-      // Keep original response error
-    }
-  }
-
-  if (!response.ok) {
-    cachedToken = null;
-    const errorText = await response.text().catch(() => '');
-    console.error('Spotify Search Error Details:', response.status, errorText);
-    throw new Error(`Spotify search failed (${response.status}): ${errorText || response.statusText}`);
-  }
-
-
-
-  const data = (await response.json()) as { tracks: { items: SpotifyTrackItem[] } };
-
-  return data.tracks.items.map((item) => ({
+function mapSpotifyItemsToTracks(items: SpotifyTrackItem[]): Track[] {
+  return items.map((item) => ({
     id: `spotify:${item.id}`,
     title: item.name,
     artist: item.artists.map((a) => a.name).join(', '),
@@ -99,5 +60,53 @@ export async function searchSpotify(query: string, userToken?: string | null, li
     externalId: item.uri,
     embedUrl: `https://open.spotify.com/embed/track/${item.id}?utm_source=generator&theme=0`,
   }));
+}
+
+export async function searchSpotify(query: string, userToken?: string | null, limit = 50): Promise<Track[]> {
+  const params = new URLSearchParams({ q: query, type: 'track', limit: String(limit) });
+  const url = `https://api.spotify.com/v1/search?${params.toString()}`;
+
+  // 1. Try user token first if provided
+  if (userToken) {
+    try {
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${userToken}` },
+        cache: 'no-store',
+      });
+      if (response.ok) {
+        const data = (await response.json()) as { tracks: { items: SpotifyTrackItem[] } };
+        return mapSpotifyItemsToTracks(data.tracks.items);
+      }
+    } catch {
+      // Ignore user token error and fall back to client credentials
+    }
+  }
+
+  // 2. Fall back to Client Credentials token
+  let clientToken = await getClientCredentialsToken();
+  let response = await fetch(url, {
+    headers: { Authorization: `Bearer ${clientToken}` },
+    cache: 'no-store',
+  });
+
+  // If cached client token expired (401), force refresh cached token once
+  if (response.status === 401) {
+    cachedToken = null;
+    clientToken = await getClientCredentialsToken();
+    response = await fetch(url, {
+      headers: { Authorization: `Bearer ${clientToken}` },
+      cache: 'no-store',
+    });
+  }
+
+  if (!response.ok) {
+    cachedToken = null;
+    const errorText = await response.text().catch(() => '');
+    console.error('Spotify Search Error Details:', response.status, errorText);
+    throw new Error(`Spotify search failed (${response.status}): ${errorText || response.statusText}`);
+  }
+
+  const data = (await response.json()) as { tracks: { items: SpotifyTrackItem[] } };
+  return mapSpotifyItemsToTracks(data.tracks.items);
 }
 

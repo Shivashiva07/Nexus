@@ -80,6 +80,10 @@ export function TopBar() {
 
       try {
         const data = await fetchAggregatedSearch(trimmed, spotifyAccessToken);
+        if (data.errors.spotify?.includes('401') || data.errors.spotify?.includes('expired')) {
+          setSpotifyAccessToken(null);
+          setSpotifyPremium(false);
+        }
         setSearchResults(data);
       } catch (error) {
         setSearchError(error instanceof Error ? error.message : 'Search failed.');
@@ -89,7 +93,7 @@ export function TopBar() {
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, spotifyAccessToken, setActiveView, setActivePlaylistId, setIsSearching, setSearchResults, setSearchError]);
+  }, [searchQuery, spotifyAccessToken, setActiveView, setActivePlaylistId, setIsSearching, setSearchResults, setSearchError, setSpotifyAccessToken, setSpotifyPremium]);
 
   async function executeSearchNow(queryToSearch: string) {
     const trimmed = queryToSearch.trim();
@@ -104,6 +108,10 @@ export function TopBar() {
 
     try {
       const data = await fetchAggregatedSearch(trimmed, spotifyAccessToken);
+      if (data.errors.spotify?.includes('401') || data.errors.spotify?.includes('expired')) {
+        setSpotifyAccessToken(null);
+        setSpotifyPremium(false);
+      }
       setSearchResults(data);
     } catch (error) {
       setSearchError(error instanceof Error ? error.message : 'Search failed.');
