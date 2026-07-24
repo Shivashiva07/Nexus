@@ -235,7 +235,7 @@ export function SearchPanel() {
 
       {/* ── Platform Filter Tablets (Spotify, YouTube, SoundCloud, VS Nectar) ── */}
       {(results || isSearching) && (
-        <div className="sticky top-0 z-20 -mx-6 -mt-6 px-6 py-3.5 bg-[#121212]/95 backdrop-blur-xl border-b border-white/[0.08] flex items-center gap-2.5 overflow-x-auto no-scrollbar shadow-lg">
+        <div className="sticky top-0 z-20 -mx-6 -mt-6 mb-4 px-6 py-3.5 bg-[#121212]/95 backdrop-blur-xl border-b border-white/[0.08] flex items-center gap-2.5 overflow-x-auto no-scrollbar shadow-lg">
           {platformTabs.map((tab) => {
             const isActive = activeTab === tab.key;
 
@@ -274,7 +274,7 @@ export function SearchPanel() {
 
         {/* Loading skeleton */}
         {isSearching && (
-          <div className="space-y-3">
+          <div className="space-y-3 pt-2">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5 bg-white/[0.03] animate-pulse">
                 <div className="h-10 w-10 rounded-lg bg-white/[0.05] shrink-0" />
@@ -289,7 +289,7 @@ export function SearchPanel() {
 
         {/* Search Results */}
         {results && !isSearching && (
-          <div className="space-y-8">
+          <div className="space-y-8 pt-2">
             {SECTIONS.filter((s) => activeTab === 'all' || activeTab === s.key).map(({ key, label }) => {
               const tracks = results[key];
               const providerError = results.errors[key];
