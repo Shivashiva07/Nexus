@@ -423,20 +423,20 @@ function PlaylistDetailView({ playlistId, onBack }: {
                 <DotsIcon />
               </button>
               {showMenu && (
-                <div className="absolute left-0 top-11 z-50 min-w-[170px] rounded-xl border border-white/[0.12] bg-[#1a1a28] py-1.5 shadow-2xl backdrop-blur-xl">
+                <div className="absolute left-0 top-11 z-50 min-w-[130px] rounded-xl border border-white/[0.12] bg-[#1a1a28] py-1.5 shadow-2xl backdrop-blur-xl">
                   <button
                     type="button"
                     onClick={() => { setShowRenameModal(true); setShowMenu(false); }}
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors"
                   >
-                    <EditIcon /> Rename playlist
+                    <EditIcon /> Rename
                   </button>
                   <button
                     type="button"
                     onClick={() => { deletePlaylist(playlistId); onBack(); }}
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-950/30 transition-colors"
                   >
-                    <TrashIcon /> Remove from Library
+                    <TrashIcon /> Delete
                   </button>
                 </div>
               )}
