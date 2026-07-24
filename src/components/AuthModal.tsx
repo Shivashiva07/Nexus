@@ -9,6 +9,7 @@ import {
   signInWithRedirect,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
 } from '@/lib/firebase';
 
 export function AuthModal() {
@@ -21,6 +22,7 @@ export function AuthModal() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
 
   if (!isAuthModalOpen) return null;
 
@@ -28,12 +30,14 @@ export function AuthModal() {
     setError(null);
     setEmail('');
     setPassword('');
+    setResetSent(false);
     setAuthModalOpen(false);
   }
 
   async function handleGoogleSignIn() {
     setLoading(true);
     setError(null);
+    setResetSent(false);
     try {
       await signInWithPopup(auth, googleProvider);
       showToast('Signed in with Google! Cloud sync active.');
@@ -85,6 +89,26 @@ export function AuthModal() {
     }
   }
 
+  async function handlePasswordReset() {
+    if (!email) {
+      setError('Please enter your email address above to reset password.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetSent(true);
+      showToast(`Password reset link sent to ${email}`);
+    } catch (err: unknown) {
+      console.error('Reset Password Error:', err);
+      const msg = err instanceof Error ? err.message : 'Failed to send reset email.';
+      setError(msg.replace('Firebase: ', ''));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email || !password) {
@@ -94,6 +118,7 @@ export function AuthModal() {
 
     setLoading(true);
     setError(null);
+    setResetSent(false);
 
     try {
       if (mode === 'signin') {
@@ -107,12 +132,13 @@ export function AuthModal() {
           const msg = signInErr instanceof Error ? signInErr.message : '';
 
           if (
-            code === 'auth/user-not-found' ||
             code === 'auth/invalid-credential' ||
-            msg.includes('user-not-found') ||
-            msg.includes('invalid-credential')
+            code === 'auth/wrong-password' ||
+            code === 'auth/user-not-found' ||
+            msg.includes('invalid-credential') ||
+            msg.includes('user-not-found')
           ) {
-            setError('Account not found or password incorrect. Try switching to Create Account.');
+            setError('Incorrect password or account not found. If you forgot your password, send a reset link below.');
             return;
           } else {
             setError(msg.replace('Firebase: ', ''));
@@ -131,7 +157,7 @@ export function AuthModal() {
       const code = (err as { code?: string })?.code || '';
 
       if (code === 'auth/email-already-in-use' || msg.includes('email-already-in-use')) {
-        setError('An account with this email already exists. Try switching to Sign In.');
+        setError('An account with this email already exists. Try signing in or reset your password.');
       } else if (code === 'auth/weak-password' || msg.includes('weak-password')) {
         setError('Password should be at least 6 characters long.');
       } else if (code === 'auth/invalid-email' || msg.includes('invalid-email')) {
@@ -226,6 +252,18 @@ export function AuthModal() {
           </button>
         </div>
 
+        {/* Password Reset Alert */}
+        {resetSent && (
+          <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-start gap-2.5 leading-relaxed animate-fade-in">
+            <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <div className="flex-1 break-words">
+              <span>Password reset link sent to <strong>{email}</strong>. Please check your inbox or spam folder.</span>
+            </div>
+          </div>
+        )}
+
         {/* Error alert */}
         {error && (
           <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-start gap-2.5 leading-relaxed animate-fade-in">
@@ -234,24 +272,44 @@ export function AuthModal() {
             </svg>
             <div className="flex-1 break-words">
               <span>{error}</span>
-              {mode === 'signin' && (error.includes('Create Account') || error.includes('not found')) && (
-                <button
-                  type="button"
-                  onClick={() => { setMode('signup'); setError(null); }}
-                  className="block mt-1.5 font-semibold text-indigo-400 hover:text-indigo-300 underline cursor-pointer transition-colors"
-                >
-                  Switch to Create Account →
-                </button>
-              )}
-              {mode === 'signup' && error.includes('Sign In') && (
-                <button
-                  type="button"
-                  onClick={() => { setMode('signin'); setError(null); }}
-                  className="block mt-1.5 font-semibold text-indigo-400 hover:text-indigo-300 underline cursor-pointer transition-colors"
-                >
-                  Switch to Sign In →
-                </button>
-              )}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1.5">
+                {mode === 'signin' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => { setMode('signup'); setError(null); }}
+                      className="font-semibold text-indigo-400 hover:text-indigo-300 underline cursor-pointer transition-colors"
+                    >
+                      Switch to Create Account →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePasswordReset}
+                      className="font-semibold text-purple-400 hover:text-purple-300 underline cursor-pointer transition-colors"
+                    >
+                      Reset Password 🔑
+                    </button>
+                  </>
+                )}
+                {mode === 'signup' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => { setMode('signin'); setError(null); }}
+                      className="font-semibold text-indigo-400 hover:text-indigo-300 underline cursor-pointer transition-colors"
+                    >
+                      Switch to Sign In →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handlePasswordReset}
+                      className="font-semibold text-purple-400 hover:text-purple-300 underline cursor-pointer transition-colors"
+                    >
+                      Reset Password 🔑
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -271,7 +329,16 @@ export function AuthModal() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-white/70 mb-1">Password</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[11px] font-medium text-white/70">Password</label>
+              <button
+                type="button"
+                onClick={handlePasswordReset}
+                className="text-[10px] text-indigo-400 hover:text-indigo-300 hover:underline cursor-pointer"
+              >
+                Forgot password?
+              </button>
+            </div>
             <input
               type="password"
               value={password}
