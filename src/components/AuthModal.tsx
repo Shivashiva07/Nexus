@@ -38,16 +38,49 @@ export function AuthModal() {
       await signInWithPopup(auth, googleProvider);
       showToast('Signed in with Google! Cloud sync active.');
       closeModal();
+      setLoading(false);
     } catch (err: unknown) {
-      console.warn('Google Sign-In popup failed, attempting redirect fallback...', err);
-      try {
-        await signInWithRedirect(auth, googleProvider);
-      } catch (redirectErr: unknown) {
-        console.error('Google Redirect Auth error:', redirectErr);
-        const msg = redirectErr instanceof Error ? redirectErr.message : 'Google sign in failed.';
-        setError(msg.replace('Firebase: ', ''));
+      console.error('Google Sign-In popup error:', err);
+      const code = (err as { code?: string })?.code || '';
+      const msg = err instanceof Error ? err.message : 'Google sign in failed.';
+
+      // User manually closed popup
+      if (code === 'auth/popup-closed-by-user' || msg.includes('popup-closed-by-user')) {
+        setLoading(false);
+        return;
       }
-    } finally {
+
+      // Domain not authorized in Firebase Console
+      if (code === 'auth/unauthorized-domain' || msg.includes('unauthorized-domain')) {
+        setError('This domain is not authorized for Google Sign-In in Firebase Console (Authentication > Settings > Authorized domains).');
+        setLoading(false);
+        return;
+      }
+
+      // Google Provider not enabled in Firebase Console
+      if (code === 'auth/operation-not-allowed' || msg.includes('operation-not-allowed')) {
+        setError('Google Sign-In is disabled. Enable Google under Firebase Console > Authentication > Sign-in method.');
+        setLoading(false);
+        return;
+      }
+
+      // If popup blocked or COOP error, try redirect fallback
+      if (code === 'auth/popup-blocked' || msg.includes('popup-blocked')) {
+        console.warn('Popup blocked, attempting redirect fallback...');
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (redirectErr: unknown) {
+          console.error('Google Redirect Auth error:', redirectErr);
+          const rMsg = redirectErr instanceof Error ? redirectErr.message : 'Google sign in failed.';
+          setError(rMsg.replace('Firebase: ', ''));
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Display the actual error message
+      setError(msg.replace('Firebase: Error (', '').replace(').', '').replace('Firebase: ', ''));
       setLoading(false);
     }
   }
@@ -64,18 +97,45 @@ export function AuthModal() {
 
     try {
       if (mode === 'signin') {
-        await signInWithEmailAndPassword(auth, email, password);
-        showToast('Successfully signed in! Cloud sync active.');
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          showToast('Successfully signed in! Cloud sync active.');
+          closeModal();
+          return;
+        } catch (signInErr: unknown) {
+          const code = (signInErr as { code?: string })?.code || '';
+          const msg = signInErr instanceof Error ? signInErr.message : '';
+
+          if (
+            code === 'auth/user-not-found' ||
+            code === 'auth/invalid-credential' ||
+            msg.includes('user-not-found') ||
+            msg.includes('invalid-credential')
+          ) {
+            setError('Account not found or password incorrect. Try switching to Create Account.');
+            return;
+          } else {
+            setError(msg.replace('Firebase: ', ''));
+            return;
+          }
+        }
       } else {
         await createUserWithEmailAndPassword(auth, email, password);
         showToast('Account created! Your library is now syncing.');
+        closeModal();
+        return;
       }
-      closeModal();
     } catch (err: unknown) {
       console.error('Email Auth Error:', err);
       const msg = err instanceof Error ? err.message : 'Authentication failed.';
-      if (msg.includes('invalid-credential') || msg.includes('user-not-found')) {
-        setError('Account not found or password incorrect. Try switching to the "Create Account" tab.');
+      const code = (err as { code?: string })?.code || '';
+
+      if (code === 'auth/email-already-in-use' || msg.includes('email-already-in-use')) {
+        setError('An account with this email already exists. Try switching to Sign In.');
+      } else if (code === 'auth/weak-password' || msg.includes('weak-password')) {
+        setError('Password should be at least 6 characters long.');
+      } else if (code === 'auth/invalid-email' || msg.includes('invalid-email')) {
+        setError('Invalid email address format.');
       } else {
         setError(msg.replace('Firebase: ', ''));
       }
@@ -116,7 +176,7 @@ export function AuthModal() {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white text-black font-semibold text-sm hover:bg-white/90 active:scale-[0.99] transition-all shadow-md mb-4 disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-white text-black font-semibold text-sm hover:bg-white/90 active:scale-[0.99] transition-all shadow-md mb-4 disabled:opacity-50 cursor-pointer"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -148,8 +208,8 @@ export function AuthModal() {
         <div className="flex bg-white/5 rounded-xl p-1 mb-4">
           <button
             type="button"
-            onClick={() => setMode('signin')}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+            onClick={() => { setMode('signin'); setError(null); }}
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               mode === 'signin' ? 'bg-white/15 text-white shadow-sm' : 'text-white/50 hover:text-white'
             }`}
           >
@@ -157,8 +217,8 @@ export function AuthModal() {
           </button>
           <button
             type="button"
-            onClick={() => setMode('signup')}
-            className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+            onClick={() => { setMode('signup'); setError(null); }}
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               mode === 'signup' ? 'bg-white/15 text-white shadow-sm' : 'text-white/50 hover:text-white'
             }`}
           >
@@ -168,11 +228,31 @@ export function AuthModal() {
 
         {/* Error alert */}
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2">
-            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-start gap-2.5 leading-relaxed animate-fade-in">
+            <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="truncate">{error}</span>
+            <div className="flex-1 break-words">
+              <span>{error}</span>
+              {mode === 'signin' && (error.includes('Create Account') || error.includes('not found')) && (
+                <button
+                  type="button"
+                  onClick={() => { setMode('signup'); setError(null); }}
+                  className="block mt-1.5 font-semibold text-indigo-400 hover:text-indigo-300 underline cursor-pointer transition-colors"
+                >
+                  Switch to Create Account →
+                </button>
+              )}
+              {mode === 'signup' && error.includes('Sign In') && (
+                <button
+                  type="button"
+                  onClick={() => { setMode('signin'); setError(null); }}
+                  className="block mt-1.5 font-semibold text-indigo-400 hover:text-indigo-300 underline cursor-pointer transition-colors"
+                >
+                  Switch to Sign In →
+                </button>
+              )}
+            </div>
           </div>
         )}
 
