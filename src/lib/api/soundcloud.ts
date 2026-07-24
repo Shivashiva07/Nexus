@@ -55,7 +55,7 @@ export async function getSoundCloudClientId(): Promise<string> {
   throw new Error('Could not obtain a valid SoundCloud Client ID.');
 }
 
-export async function searchSoundCloud(query: string, limit = 10): Promise<Track[]> {
+export async function searchSoundCloud(query: string, limit = 50): Promise<Track[]> {
   const clientId = await getSoundCloudClientId();
 
   const params = new URLSearchParams({

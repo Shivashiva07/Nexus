@@ -49,7 +49,7 @@ interface SpotifyTrackItem {
   album: { images: Array<{ url: string }> };
 }
 
-export async function searchSpotify(query: string, userToken?: string | null, limit = 10): Promise<Track[]> {
+export async function searchSpotify(query: string, userToken?: string | null, limit = 50): Promise<Track[]> {
   let token: string;
   if (userToken) {
     token = userToken;

@@ -22,7 +22,7 @@ function parseIso8601Duration(duration: string): number {
   return (Number(hours) || 0) * 3600 + (Number(minutes) || 0) * 60 + (Number(seconds) || 0);
 }
 
-export async function searchYouTube(query: string, limit = 10): Promise<Track[]> {
+export async function searchYouTube(query: string, limit = 50): Promise<Track[]> {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {
     throw new Error('YOUTUBE_API_KEY is not configured.');

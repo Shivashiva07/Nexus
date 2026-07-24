@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import type { Track } from '@/store/usePlayerStore';
 
-export async function searchVSNectar(query: string, limit = 10): Promise<Track[]> {
+export async function searchVSNectar(query: string, limit = 50): Promise<Track[]> {
   const normalizedQuery = query.toLowerCase().trim();
   if (!normalizedQuery) return [];
 

@@ -11,14 +11,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Query parameter "q" is required.' }, { status: 400 });
   }
 
+  const limitParam = request.nextUrl.searchParams.get('limit');
+  const limit = limitParam ? Math.min(Math.max(parseInt(limitParam, 10) || 50, 1), 50) : 50;
+
   const authHeader = request.headers.get('authorization');
   const userToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
 
   const [spotifyResult, youtubeResult, soundcloudResult, vsnectarResult] = await Promise.allSettled([
-    searchSpotify(query, userToken),
-    searchYouTube(query),
-    searchSoundCloud(query),
-    searchVSNectar(query),
+    searchSpotify(query, userToken, limit),
+    searchYouTube(query, limit),
+    searchSoundCloud(query, limit),
+    searchVSNectar(query, limit),
   ]);
 
 
