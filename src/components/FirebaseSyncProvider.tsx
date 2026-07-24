@@ -6,6 +6,7 @@ import {
   db,
   signInAnonymously,
   onAuthStateChanged,
+  getRedirectResult,
   doc,
   onSnapshot,
   setDoc,
@@ -44,6 +45,7 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
   const setLibraryFromCloud = usePlayerStore((s) => s.setLibraryFromCloud);
   const setPlaylistsFromCloud = usePlayerStore((s) => s.setPlaylistsFromCloud);
   const setRecentSearchesFromCloud = usePlayerStore((s) => s.setRecentSearchesFromCloud);
+  const showToast = usePlayerStore((s) => s.showToast);
 
   const library = usePlayerStore((s) => s.library);
   const playlists = usePlayerStore((s) => s.playlists);
@@ -66,16 +68,35 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
     stateRef.current = { library, playlists, recentSearches };
   }, [library, playlists, recentSearches]);
 
-  // 1. Handle Firebase Auth state & Anonymous sign-in
+  // 1. Handle Firebase Redirect Results & Auth State Listener
   useEffect(() => {
+    // Process redirect result if returning from Google Auth redirect
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          showToast(`Welcome ${result.user.displayName || result.user.email}! Cloud sync active.`);
+        }
+      })
+      .catch((err) => {
+        console.warn('Redirect auth result error:', err);
+      });
+
     const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
-      if (user) {
+      if (user && !user.isAnonymous) {
         setFirebaseUser(user.uid);
         setUserProfile({
           userEmail: user.email,
           userDisplayName: user.displayName,
           userPhotoURL: user.photoURL,
-          isAnonymousUser: user.isAnonymous,
+          isAnonymousUser: false,
+        });
+      } else if (user) {
+        setFirebaseUser(user.uid);
+        setUserProfile({
+          userEmail: user.email,
+          userDisplayName: user.displayName,
+          userPhotoURL: user.photoURL,
+          isAnonymousUser: true,
         });
       } else {
         setUserProfile(null);
@@ -86,7 +107,7 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
             userEmail: cred.user.email,
             userDisplayName: cred.user.displayName,
             userPhotoURL: cred.user.photoURL,
-            isAnonymousUser: cred.user.isAnonymous,
+            isAnonymousUser: true,
           });
         } catch (err) {
           console.warn('Firebase anonymous auth failed:', err);
@@ -95,7 +116,7 @@ export function FirebaseSyncProvider({ children }: { children: React.ReactNode }
     });
 
     return () => unsubscribe();
-  }, [setFirebaseUser, setUserProfile]);
+  }, [setFirebaseUser, setUserProfile, showToast]);
 
   // 2. Attach Firestore Realtime Listener & Merge Cloud Data
   useEffect(() => {

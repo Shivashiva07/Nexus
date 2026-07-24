@@ -254,15 +254,15 @@ export function TopBar() {
         {mounted && (
           <>
             {/* Cloud Sync Account Button */}
-            {!isAnonymousUser && userEmail ? (
+            {!isAnonymousUser ? (
               <div className="flex items-center gap-2.5 rounded-full bg-[#181818] border border-indigo-500/30 px-3 py-1.5 shadow-sm">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 text-white font-bold text-xs shrink-0">
-                  {userDisplayName ? userDisplayName[0].toUpperCase() : userEmail[0].toUpperCase()}
+                  {userDisplayName ? userDisplayName[0].toUpperCase() : userEmail ? userEmail[0].toUpperCase() : 'U'}
                 </div>
                 <div className="flex flex-col text-left">
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-semibold text-white leading-none max-w-[100px] truncate">
-                      {userDisplayName || userEmail.split('@')[0]}
+                      {userDisplayName || (userEmail ? userEmail.split('@')[0] : 'User')}
                     </p>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="Cloud Synced" />
                   </div>
