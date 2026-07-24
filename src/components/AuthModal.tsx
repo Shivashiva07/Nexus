@@ -40,7 +40,11 @@ export function AuthModal() {
     } catch (err: unknown) {
       console.error('Google Sign-In error:', err);
       const msg = err instanceof Error ? err.message : 'Google sign in failed.';
-      setError(msg.replace('Firebase: ', ''));
+      if (msg.includes('popup-blocked')) {
+        setError('Pop-up blocked by browser. Please allow pop-ups for this site, or use Email registration below.');
+      } else {
+        setError(msg.replace('Firebase: ', ''));
+      }
     } finally {
       setLoading(false);
     }
@@ -68,7 +72,11 @@ export function AuthModal() {
     } catch (err: unknown) {
       console.error('Email Auth Error:', err);
       const msg = err instanceof Error ? err.message : 'Authentication failed.';
-      setError(msg.replace('Firebase: ', ''));
+      if (msg.includes('invalid-credential') || msg.includes('user-not-found')) {
+        setError('Account not found or password incorrect. Try switching to the "Create Account" tab.');
+      } else {
+        setError(msg.replace('Firebase: ', ''));
+      }
     } finally {
       setLoading(false);
     }
