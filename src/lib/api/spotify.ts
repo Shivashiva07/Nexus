@@ -62,20 +62,41 @@ function mapSpotifyItemsToTracks(items: SpotifyTrackItem[]): Track[] {
   }));
 }
 
-export async function searchSpotify(query: string, userToken?: string | null, limit = 50): Promise<Track[]> {
-  const params = new URLSearchParams({ q: query, type: 'track', limit: String(limit) });
-  const url = `https://api.spotify.com/v1/search?${params.toString()}`;
+async function fetchSpotifyPage(query: string, token: string, limit: number, offset: number): Promise<SpotifyTrackItem[]> {
+  const params = new URLSearchParams({
+    q: query,
+    type: 'track',
+    limit: String(limit),
+    offset: String(offset),
+  });
+  const response = await fetch(`https://api.spotify.com/v1/search?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    throw new Error(`Spotify search failed (${response.status}): ${errorText || response.statusText}`);
+  }
+
+  const data = (await response.json()) as { tracks: { items: SpotifyTrackItem[] } };
+  return data.tracks?.items ?? [];
+}
+
+export async function searchSpotify(query: string, userToken?: string | null, targetLimit = 50): Promise<Track[]> {
+  const chunkSize = 10;
+  const numRequests = Math.ceil(Math.min(targetLimit, 50) / chunkSize);
+  const offsets = Array.from({ length: numRequests }, (_, i) => i * chunkSize);
 
   // 1. Try user token first if provided
   if (userToken) {
     try {
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${userToken}` },
-        cache: 'no-store',
-      });
-      if (response.ok) {
-        const data = (await response.json()) as { tracks: { items: SpotifyTrackItem[] } };
-        return mapSpotifyItemsToTracks(data.tracks.items);
+      const results = await Promise.all(
+        offsets.map((offset) => fetchSpotifyPage(query, userToken, chunkSize, offset))
+      );
+      const allItems = results.flat();
+      if (allItems.length > 0) {
+        return mapSpotifyItemsToTracks(allItems.slice(0, targetLimit));
       }
     } catch {
       // Ignore user token error and fall back to client credentials
@@ -84,29 +105,19 @@ export async function searchSpotify(query: string, userToken?: string | null, li
 
   // 2. Fall back to Client Credentials token
   let clientToken = await getClientCredentialsToken();
-  let response = await fetch(url, {
-    headers: { Authorization: `Bearer ${clientToken}` },
-    cache: 'no-store',
-  });
-
-  // If cached client token expired (401), force refresh cached token once
-  if (response.status === 401) {
+  try {
+    const results = await Promise.all(
+      offsets.map((offset) => fetchSpotifyPage(query, clientToken, chunkSize, offset))
+    );
+    return mapSpotifyItemsToTracks(results.flat().slice(0, targetLimit));
+  } catch {
+    // If client credentials token failed or expired (e.g. 401), force refresh token and retry once
     cachedToken = null;
     clientToken = await getClientCredentialsToken();
-    response = await fetch(url, {
-      headers: { Authorization: `Bearer ${clientToken}` },
-      cache: 'no-store',
-    });
+    const results = await Promise.all(
+      offsets.map((offset) => fetchSpotifyPage(query, clientToken, chunkSize, offset))
+    );
+    return mapSpotifyItemsToTracks(results.flat().slice(0, targetLimit));
   }
-
-  if (!response.ok) {
-    cachedToken = null;
-    const errorText = await response.text().catch(() => '');
-    console.error('Spotify Search Error Details:', response.status, errorText);
-    throw new Error(`Spotify search failed (${response.status}): ${errorText || response.statusText}`);
-  }
-
-  const data = (await response.json()) as { tracks: { items: SpotifyTrackItem[] } };
-  return mapSpotifyItemsToTracks(data.tracks.items);
 }
 
