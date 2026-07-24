@@ -238,9 +238,6 @@ export function SearchPanel() {
         <div className="sticky top-0 z-20 -mx-6 -mt-6 px-6 py-3.5 bg-[#121212]/95 backdrop-blur-xl border-b border-white/[0.08] flex items-center gap-2.5 overflow-x-auto no-scrollbar shadow-lg">
           {platformTabs.map((tab) => {
             const isActive = activeTab === tab.key;
-            const count = tab.key === 'all'
-              ? (results ? (results.spotify.length + results.youtube.length + results.soundcloud.length + results.vsnectar.length) : 0)
-              : (results?.[tab.key as keyof Omit<AggregatedSearchResult, 'errors'>]?.length ?? 0);
 
             return (
               <button
@@ -254,13 +251,6 @@ export function SearchPanel() {
                 }`}
               >
                 <span>{tab.label}</span>
-                {results && (
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                    isActive ? 'bg-black/20 text-current' : 'bg-white/10 text-white/70'
-                  }`}>
-                    {count}
-                  </span>
-                )}
               </button>
             );
           })}
