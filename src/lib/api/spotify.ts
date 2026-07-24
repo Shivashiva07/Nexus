@@ -83,7 +83,31 @@ async function fetchSpotifyPage(query: string, token: string, limit: number, off
   return data.tracks?.items ?? [];
 }
 
+function extractSpotifyTrackId(input: string): string | null {
+  const match = input.match(/open\.spotify\.com\/track\/([a-zA-Z0-9]{22})/);
+  return match ? match[1] : null;
+}
+
 export async function searchSpotify(query: string, userToken?: string | null, targetLimit = 50): Promise<Track[]> {
+  // Direct Spotify Link Lookup
+  const directTrackId = extractSpotifyTrackId(query);
+  if (directTrackId) {
+    try {
+      let token = userToken;
+      if (!token) token = await getClientCredentialsToken();
+      const res = await fetch(`https://api.spotify.com/v1/tracks/${directTrackId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const item = (await res.json()) as SpotifyTrackItem;
+        return mapSpotifyItemsToTracks([item]);
+      }
+    } catch {
+      // Fall through to regular search
+    }
+  }
+
   const chunkSize = 10;
   const numRequests = Math.ceil(Math.min(targetLimit, 50) / chunkSize);
   const offsets = Array.from({ length: numRequests }, (_, i) => i * chunkSize);

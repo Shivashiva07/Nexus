@@ -22,12 +22,49 @@ function parseIso8601Duration(duration: string): number {
   return (Number(hours) || 0) * 3600 + (Number(minutes) || 0) * 60 + (Number(seconds) || 0);
 }
 
+function extractYouTubeVideoId(input: string): string | null {
+  const match = input.match(/(?:youtube\.com\/(?:watch\?.*v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
+}
+
 export async function searchYouTube(query: string, limit = 50): Promise<Track[]> {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {
     throw new Error('YOUTUBE_API_KEY is not configured.');
   }
 
+  // 1. Direct YouTube Link Detection
+  const directVideoId = extractYouTubeVideoId(query);
+  if (directVideoId) {
+    const videosParams = new URLSearchParams({
+      part: 'snippet,contentDetails',
+      id: directVideoId,
+      key: apiKey,
+    });
+    const videosResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?${videosParams.toString()}`, {
+      cache: 'no-store',
+    });
+    if (videosResponse.ok) {
+      const videosData = (await videosResponse.json()) as { items: YouTubeVideoItem[] };
+      if (videosData.items && videosData.items.length > 0) {
+        return videosData.items.map((item) => ({
+          id: `youtube:${item.id}`,
+          title: item.snippet.title,
+          artist: item.snippet.channelTitle,
+          artwork:
+            item.snippet.thumbnails.high?.url ??
+            item.snippet.thumbnails.medium?.url ??
+            item.snippet.thumbnails.default?.url ??
+            '',
+          duration: parseIso8601Duration(item.contentDetails.duration),
+          source: 'youtube' as const,
+          externalId: item.id,
+        }));
+      }
+    }
+  }
+
+  // 2. Standard Search Query
   const searchParams = new URLSearchParams({
     part: 'snippet',
     q: query,
