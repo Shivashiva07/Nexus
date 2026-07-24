@@ -412,22 +412,6 @@ function PlaylistDetailView({ playlistId, onBack }: {
             <PlayIcon />
           </button>
 
-          {/* Direct Remove from Library button */}
-          {!isLiked && (
-            <button
-              type="button"
-              onClick={() => {
-                deletePlaylist(playlistId);
-                onBack();
-              }}
-              className="flex items-center gap-2 rounded-full border border-white/10 px-3.5 py-1.5 text-xs font-semibold text-white/70 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/30 transition-all"
-              title="Remove playlist from library"
-            >
-              <TrashIcon />
-              <span>Remove from Library</span>
-            </button>
-          )}
-
           {/* Three-dot menu (only for user playlists) */}
           {!isLiked && (
             <div className="relative" ref={menuRef}>
