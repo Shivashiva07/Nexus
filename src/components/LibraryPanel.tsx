@@ -366,11 +366,11 @@ function PlaylistDetailView({ playlistId, onBack }: {
   const totalDuration = playlist.tracks.reduce((acc, t) => acc + (t.duration || 0), 0);
 
   return (
-    <div className="flex h-full flex-col bg-[#121212]">
+    <div className="flex h-full flex-col bg-[#121212] overflow-y-auto">
       {/* Hero header */}
-      <div className="relative border-b border-white/[0.04] px-6 pt-5 pb-5 overflow-hidden">
+      <div className="relative border-b border-white/[0.04] px-6 pt-5 pb-5">
         {/* subtle background glow from artwork */}
-        <div className="pointer-events-none absolute inset-0 opacity-20"
+        <div className="pointer-events-none absolute inset-0 opacity-20 overflow-hidden"
           style={{ background: isLiked ? 'radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.6) 0%, transparent 60%)' : 'radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.3) 0%, transparent 60%)' }}
         />
 
@@ -423,7 +423,7 @@ function PlaylistDetailView({ playlistId, onBack }: {
                 <DotsIcon />
               </button>
               {showMenu && (
-                <div className="absolute left-0 top-11 z-30 min-w-[160px] rounded-xl border border-white/[0.1] bg-[#1a1a28] py-1.5 shadow-2xl">
+                <div className="absolute left-0 top-11 z-50 min-w-[170px] rounded-xl border border-white/[0.12] bg-[#1a1a28] py-1.5 shadow-2xl backdrop-blur-xl">
                   <button
                     type="button"
                     onClick={() => { setShowRenameModal(true); setShowMenu(false); }}
@@ -446,7 +446,7 @@ function PlaylistDetailView({ playlistId, onBack }: {
       </div>
 
       {/* Track list */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="px-6 py-4 pb-12">
         {playlist.tracks.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-center pb-16">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.03] border border-white/[0.05]">
