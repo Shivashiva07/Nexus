@@ -222,12 +222,52 @@ export function SearchPanel() {
     setQueue(combinedTracks, index);
   }
 
+function SpotifyCapsuleLogo({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+    </svg>
+  );
+}
+
+function YouTubeCapsuleLogo({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+    </svg>
+  );
+}
+
+function SoundCloudCapsuleLogo({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M1.175 12.225c-.07 0-.13.06-.14.13l-.33 3.54.33 3.52c.01.07.07.12.14.12.07 0 .13-.05.14-.12l.37-3.52-.37-3.54c-.01-.07-.07-.13-.14-.13zm1.18-.88c-.08 0-.14.06-.15.14l-.32 4.41.32 4.34c.01.08.07.14.15.14s.14-.06.15-.14l.37-4.34-.37-4.41c-.01-.08-.07-.14-.15-.14zm1.18-.73c-.09 0-.15.06-.16.15l-.3 5.14.3 5.03c.01.09.07.15.16.15s.15-.06.16-.15l.35-5.03-.35-5.14c-.01-.09-.07-.15-.16-.15zm1.18-.39c-.09 0-.16.07-.17.16l-.28 5.53.28 5.37c.01.09.08.16.17.16s.16-.07.17-.16l.33-5.37-.33-5.53c-.01-.09-.08-.16-.17-.16zm1.18-.28c-.1 0-.17.07-.18.17l-.26 5.81.26 5.61c.01.1.08.17.18.17s.17-.07.18-.17l.31-5.61-.31-5.81c-.01-.1-.08-.17-.18-.17zm1.18-.46c-.1 0-.18.07-.19.17l-.24 6.27.24 5.92c.01.1.09.18.19.18.11 0 .18-.08.19-.18l.29-5.92-.29-6.27c-.01-.1-.08-.17-.19-.17zm1.18-.8c-.11 0-.19.08-.2.19l-.22 7.07.22 6.18c.01.1.09.18.2.18s.19-.08.2-.18l.27-6.18-.27-7.07c-.01-.11-.09-.19-.2-.19zm1.18-.78c-.11 0-.2.08-.21.19l-.2 7.85.2 6.35c.01.11.1.19.21.19s.2-.08.21-.19l.25-6.35-.25-7.85c-.01-.11-.1-.19-.21-.19zm1.18-.54c-.12 0-.2.09-.21.2l-.18 8.39.18 6.49c.01.11.1.2.21.2s.2-.09.21-.2l.23-6.49-.23-8.39c-.01-.11-.09-.2-.21-.2zm1.18-1.5c-.12 0-.21.09-.22.21l-.16 9.89.16 6.64c.01.12.1.21.22.21s.21-.09.22-.21l.21-6.64-.21-9.89c-.01-.12-.1-.21-.22-.21zm1.18.59c-.13 0-.22.1-.23.22l-.14 9.3.14 6.74c.01.12.1.22.23.22.12 0 .22-.1.23-.22l.19-6.74-.19-9.3c-.01-.12-.1-.22-.23-.22zm3.62-5.75c-1.39 0-2.58.74-3.23 1.84l-.16 9.17.16 6.84c.01.13.11.23.24.23h7.62c2.48 0 4.5-2.02 4.5-4.5 0-2.31-1.74-4.21-4-4.47-.36-2.58-2.57-4.58-5.13-4.58z"/>
+    </svg>
+  );
+}
+
+function VSNectarCapsuleLogo({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
+    </svg>
+  );
+}
+
+function AllCapsuleLogo({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+    </svg>
+  );
+}
+
   const platformTabs = [
-    { key: 'all',        label: 'All',        color: 'bg-white text-black font-bold' },
-    { key: 'spotify',    label: 'Spotify',    color: 'bg-[#1db954] text-black font-bold' },
-    { key: 'youtube',    label: 'YouTube',    color: 'bg-[#ff0000] text-white font-bold' },
-    { key: 'soundcloud', label: 'SoundCloud', color: 'bg-[#ff5500] text-white font-bold' },
-    { key: 'vsnectar',   label: 'VS Nectar',  color: 'bg-[#f59e0b] text-black font-bold' },
+    { key: 'all',        label: 'All',        Icon: AllCapsuleLogo,        color: 'bg-white text-black font-bold' },
+    { key: 'spotify',    label: 'Spotify',    Icon: SpotifyCapsuleLogo,    color: 'bg-[#1db954] text-black font-bold' },
+    { key: 'youtube',    label: 'YouTube',    Icon: YouTubeCapsuleLogo,    color: 'bg-[#ff0000] text-white font-bold' },
+    { key: 'soundcloud', label: 'SoundCloud', Icon: SoundCloudCapsuleLogo, color: 'bg-[#ff5500] text-white font-bold' },
+    { key: 'vsnectar',   label: 'VS Nectar',  Icon: VSNectarCapsuleLogo,   color: 'bg-[#f59e0b] text-black font-bold' },
   ];
 
   return (
@@ -238,6 +278,7 @@ export function SearchPanel() {
         <div className="sticky top-0 z-20 -mx-6 -mt-6 mb-4 px-6 py-3.5 bg-[#121212]/95 backdrop-blur-xl border-b border-white/[0.08] flex items-center gap-2.5 overflow-x-auto no-scrollbar shadow-lg">
           {platformTabs.map((tab) => {
             const isActive = activeTab === tab.key;
+            const TabIcon = tab.Icon;
 
             return (
               <button
@@ -250,6 +291,7 @@ export function SearchPanel() {
                     : 'bg-[#242424] text-white/80 hover:bg-[#323232] hover:text-white'
                 }`}
               >
+                <TabIcon className="h-4 w-4 shrink-0" />
                 <span>{tab.label}</span>
               </button>
             );
