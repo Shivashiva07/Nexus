@@ -3,8 +3,9 @@
 import logoImg from '../../public/logo.png';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
-import { usePlayerStore, LIKED_SONGS_ID } from '@/store/usePlayerStore';
-import { CreatePlaylistModal } from '@/components/LibraryPanel';
+import { usePlayerStore, LIKED_SONGS_ID, type Playlist } from '@/store/usePlayerStore';
+import { CreatePlaylistModal, DeletePlaylistModal } from '@/components/LibraryPanel';
+import { ImportYouTubePlaylistModal } from '@/components/ImportYouTubePlaylistModal';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,9 @@ export function Sidebar() {
   const [mounted, setMounted] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showImportYouTubeModal, setShowImportYouTubeModal] = useState(false);
+  const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,7 +97,6 @@ export function Sidebar() {
 
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [isResizing, setIsResizing] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -229,6 +232,16 @@ export function Sidebar() {
           <div className="flex items-center gap-1">
             <button
               type="button"
+              onClick={() => setShowImportYouTubeModal(true)}
+              title="Import YouTube Playlist Link"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-red-500 hover:bg-red-500/20 transition-all"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+            </button>
+            <button
+              type="button"
               onClick={() => setShowCreateModal(true)}
               title="Create playlist"
               className="flex h-8 w-8 items-center justify-center rounded-full text-[#b3b3b3] hover:text-white hover:bg-[#2a2a2a] transition-all"
@@ -336,10 +349,7 @@ export function Sidebar() {
                   title="Remove from Library"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (activePlaylistId === p.id) {
-                      setActivePlaylistId(null);
-                    }
-                    deletePlaylist(p.id);
+                    setPlaylistToDelete(p);
                   }}
                   className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full text-[#a7a7a7] hover:text-red-400 hover:bg-white/10 transition-all shrink-0 ml-1"
                 >
@@ -396,6 +406,28 @@ export function Sidebar() {
         <CreatePlaylistModal
           onClose={() => setShowCreateModal(false)}
           onCreate={handleCreate}
+        />
+      )}
+
+      {/* ── Import YouTube Playlist Modal ──────────────────────── */}
+      {showImportYouTubeModal && (
+        <ImportYouTubePlaylistModal
+          onClose={() => setShowImportYouTubeModal(false)}
+        />
+      )}
+
+      {/* ── Delete Playlist Confirmation Modal ───────────────────── */}
+      {playlistToDelete && (
+        <DeletePlaylistModal
+          playlistName={playlistToDelete.name}
+          onClose={() => setPlaylistToDelete(null)}
+          onDelete={() => {
+            if (activePlaylistId === playlistToDelete.id) {
+              setActivePlaylistId(null);
+            }
+            deletePlaylist(playlistToDelete.id);
+            setPlaylistToDelete(null);
+          }}
         />
       )}
     </aside>

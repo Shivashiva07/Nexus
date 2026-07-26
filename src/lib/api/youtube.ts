@@ -27,6 +27,16 @@ function extractYouTubeVideoId(input: string): string | null {
   return match ? match[1] : null;
 }
 
+export function extractYouTubePlaylistId(input: string): string | null {
+  const trimmed = input.trim();
+  const listMatch = trimmed.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+  if (listMatch) return listMatch[1];
+  if (/^(?:PL|OLAK5uy_|FL|LL|RD)[a-zA-Z0-9_-]+$/.test(trimmed)) {
+    return trimmed;
+  }
+  return null;
+}
+
 export async function searchYouTube(query: string, limit = 50): Promise<Track[]> {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {
@@ -111,4 +121,136 @@ export async function searchYouTube(query: string, limit = 50): Promise<Track[]>
     source: 'youtube' as const,
     externalId: item.id,
   }));
+}
+
+export async function fetchYouTubePlaylist(input: string): Promise<{
+  id: string;
+  name: string;
+  description?: string;
+  tracks: Track[];
+}> {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) {
+    throw new Error('YOUTUBE_API_KEY is not configured.');
+  }
+
+  const playlistId = extractYouTubePlaylistId(input);
+  if (!playlistId) {
+    throw new Error('Invalid YouTube playlist URL or ID.');
+  }
+
+  // 1. Fetch Playlist Metadata
+  const playlistParams = new URLSearchParams({
+    part: 'snippet',
+    id: playlistId,
+    key: apiKey,
+  });
+
+  const playlistRes = await fetch(`https://www.googleapis.com/youtube/v3/playlists?${playlistParams.toString()}`, {
+    cache: 'no-store',
+  });
+
+  let playlistTitle = 'YouTube Playlist';
+  let playlistDescription = '';
+
+  if (playlistRes.ok) {
+    const playlistData = await playlistRes.json();
+    if (playlistData.items && playlistData.items.length > 0) {
+      playlistTitle = playlistData.items[0].snippet.title || playlistTitle;
+      playlistDescription = playlistData.items[0].snippet.description || '';
+    }
+  }
+
+  // 2. Fetch Playlist Items (up to 50 items)
+  const itemsParams = new URLSearchParams({
+    part: 'snippet,contentDetails',
+    playlistId: playlistId,
+    maxResults: '50',
+    key: apiKey,
+  });
+
+  const itemsRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${itemsParams.toString()}`, {
+    cache: 'no-store',
+  });
+
+  if (!itemsRes.ok) {
+    const errData = await itemsRes.json().catch(() => ({}));
+    throw new Error(errData?.error?.message || `Failed to fetch YouTube playlist (status ${itemsRes.status})`);
+  }
+
+  const itemsData = await itemsRes.json();
+  const rawItems = itemsData.items || [];
+
+  const videoIds: string[] = [];
+  const rawTracks: Array<{
+    id: string;
+    videoId: string;
+    title: string;
+    artist: string;
+    artwork: string;
+  }> = [];
+
+  for (const item of rawItems) {
+    const videoId = item.snippet?.resourceId?.videoId || item.contentDetails?.videoId;
+    if (!videoId) continue;
+    videoIds.push(videoId);
+    rawTracks.push({
+      id: `youtube:${videoId}`,
+      videoId,
+      title: item.snippet?.title || 'Untitled Track',
+      artist: item.snippet?.videoOwnerChannelTitle || item.snippet?.channelTitle || 'YouTube',
+      artwork:
+        item.snippet?.thumbnails?.high?.url ??
+        item.snippet?.thumbnails?.medium?.url ??
+        item.snippet?.thumbnails?.default?.url ??
+        '',
+    });
+  }
+
+  if (videoIds.length === 0) {
+    return {
+      id: playlistId,
+      name: playlistTitle,
+      description: playlistDescription,
+      tracks: [],
+    };
+  }
+
+  // 3. Fetch video details for exact durations
+  const durationMap = new Map<string, number>();
+  const videosParams = new URLSearchParams({
+    part: 'contentDetails',
+    id: videoIds.join(','),
+    key: apiKey,
+  });
+
+  const videosRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?${videosParams.toString()}`, {
+    cache: 'no-store',
+  });
+
+  if (videosRes.ok) {
+    const videosData = await videosRes.json();
+    for (const v of videosData.items || []) {
+      if (v.id && v.contentDetails?.duration) {
+        durationMap.set(v.id, parseIso8601Duration(v.contentDetails.duration));
+      }
+    }
+  }
+
+  const tracks: Track[] = rawTracks.map((t) => ({
+    id: t.id,
+    title: t.title,
+    artist: t.artist,
+    artwork: t.artwork,
+    duration: durationMap.get(t.videoId) || 0,
+    source: 'youtube' as const,
+    externalId: t.videoId,
+  }));
+
+  return {
+    id: playlistId,
+    name: playlistTitle,
+    description: playlistDescription,
+    tracks,
+  };
 }

@@ -1,10 +1,12 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { TrackRow } from '@/components/TrackRow';
 import { AddToPlaylistModal } from '@/components/LibraryPanel';
+import { ImportYouTubePlaylistModal } from '@/components/ImportYouTubePlaylistModal';
 import { usePlayerStore, LIKED_SONGS_ID, type Track } from '@/store/usePlayerStore';
 import { fetchAggregatedSearch, resolveSoundCloudStreamUrl } from '@/lib/api/client';
+import { extractYouTubePlaylistId } from '@/lib/api/youtube';
 import type { AggregatedSearchResult } from '@/lib/api/types';
 
 const SECTIONS: Array<{ key: keyof Omit<AggregatedSearchResult, 'errors'>; label: string; color: string }> = [
@@ -111,7 +113,11 @@ export function SearchPanel() {
   const [resolvingTrackId, setResolvingTrackId] = useState<string | null>(null);
   const [addToPlaylistTrack, setAddToPlaylistTrack] = useState<Track | null>(null);
 
+  const searchQuery = usePlayerStore((s) => s.searchQuery);
   const setSearchQuery = usePlayerStore((s) => s.setSearchQuery);
+  const detectedPlaylistId = useMemo(() => extractYouTubePlaylistId(searchQuery), [searchQuery]);
+  const [showImportPlaylistModal, setShowImportPlaylistModal] = useState(false);
+
   const results = usePlayerStore((s) => s.searchResults);
   const setResults = usePlayerStore((s) => s.setSearchResults);
   const isSearching = usePlayerStore((s) => s.isSearching);
@@ -279,102 +285,16 @@ function AllCapsuleLogo({ className = "h-4 w-4" }: { className?: string }) {
           {platformTabs.map((tab) => {
             const isActive = activeTab === tab.key;
             const TabIcon = tab.Icon;
-
-<<<<<<< Updated upstream
             return (
-=======
-          {/* Search bar — Spotify pill style */}
-          <div ref={dropdownRef} className="relative flex-1">
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
-                  {isSearching
-                    ? <LoadingSpinner />
-                    : <svg viewBox="0 0 24 24" fill="none" stroke="#b3b3b3" strokeWidth={2.5} className="h-4 w-4"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" strokeLinecap="round" /></svg>
-                  }
-                </div>
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onFocus={() => setIsDropdownOpen(true)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearch(e as unknown as FormEvent); } }}
-                  placeholder="What do you want to play?"
-                  className="w-full rounded-full bg-[#2a2a2a] pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-[#a7a7a7] focus:outline-none focus:ring-2 focus:ring-white/20 hover:bg-[#3a3a3a] transition-colors"
-                />
-              </div>
-            </form>
-
-            {/* Recent Searches Dropdown */}
-            {isDropdownOpen && recentSearches.length > 0 && (
-              <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 rounded-2xl border border-white/[0.07] bg-[#12121a]/95 p-2 shadow-2xl backdrop-blur-xl animate-fade-up">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.05] mb-1">
-                  <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Recent
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => clearRecentSearches()}
-                    className="text-[10px] text-white/20 hover:text-red-400 transition-colors"
-                  >
-                    Clear all
-                  </button>
-                </div>
-
-                <div className="max-h-52 overflow-y-auto space-y-0.5">
-                  {recentSearches.map((item) => (
-                    <div
-                      key={item}
-                      className="group flex items-center justify-between rounded-xl px-3 py-2 text-xs text-white/50 hover:bg-white/[0.06] hover:text-white cursor-pointer transition-all"
-                      onClick={() => handleSelectRecent(item)}
-                    >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <svg className="w-3 h-3 shrink-0 text-white/20 group-hover:text-violet-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <span className="truncate">{item}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); removeRecentSearch(item); }}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-white/20 hover:text-white/60 transition-all"
-                        title="Remove from history"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Platform Filter Tabs (shown after search) */}
-        {results && (
-          <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-0.5 no-scrollbar">
-            {tabs.map((tab) => (
->>>>>>> Stashed changes
               <button
                 key={tab.key}
                 type="button"
                 onClick={() => setActiveTab(tab.key)}
-<<<<<<< Updated upstream
                 className={`flex items-center gap-2 shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition-all shadow-sm ${
                   isActive
                     ? `${tab.color} scale-105 shadow-md`
                     : 'bg-[#242424] text-white/80 hover:bg-[#323232] hover:text-white'
                 }`}
-=======
-                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${activeTab === tab.key
-                    ? 'bg-white text-black'
-                    : 'bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]'
-                  }`}
->>>>>>> Stashed changes
               >
                 <TabIcon className="h-4 w-4 shrink-0" />
                 <span>{tab.label}</span>
@@ -383,6 +303,30 @@ function AllCapsuleLogo({ className = "h-4 w-4" }: { className?: string }) {
           })}
         </div>
       )}
+
+        {/* YouTube Playlist Link Detected Banner */}
+        {detectedPlaylistId && (
+          <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-red-950/50 via-[#1e1520] to-[#141420] border border-red-500/40 p-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-600/20 text-red-500 border border-red-500/30">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">YouTube Playlist Link Detected</p>
+                <p className="text-xs text-white/60">Import all tracks from this playlist directly into your app library.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowImportPlaylistModal(true)}
+              className="shrink-0 rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white shadow-md hover:bg-red-500 transition-all hover:scale-105"
+            >
+              Import Playlist
+            </button>
+          </div>
+        )}
 
         {/* Error */}
         {searchError && (
@@ -463,7 +407,13 @@ function AllCapsuleLogo({ className = "h-4 w-4" }: { className?: string }) {
           onClose={() => setAddToPlaylistTrack(null)}
         />
       )}
+
+      {/* Import YouTube Playlist Modal */}
+      {showImportPlaylistModal && (
+        <ImportYouTubePlaylistModal
+          onClose={() => setShowImportPlaylistModal(false)}
+        />
+      )}
     </div>
   );
-}
 }

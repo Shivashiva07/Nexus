@@ -78,6 +78,7 @@ interface PlayerState {
   toggleLibraryTrack: (track: Track) => void;
   // Playlist CRUD
   createPlaylist: (name: string, description?: string) => string;
+  createPlaylistWithTracks: (name: string, description: string | undefined, tracks: Track[]) => string;
   deletePlaylist: (id: string) => void;
   renamePlaylist: (id: string, name: string) => void;
   addTrackToPlaylist: (playlistId: string, track: Track) => void;
@@ -309,6 +310,16 @@ export const usePlayerStore = create<PlayerState>()(
           playlists: [
             ...state.playlists,
             { id, name, description, tracks: [], createdAt: Date.now() },
+          ],
+        }));
+        return id;
+      },
+      createPlaylistWithTracks: (name, description, tracks) => {
+        const id = `playlist_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        set((state) => ({
+          playlists: [
+            ...state.playlists,
+            { id, name, description, tracks, createdAt: Date.now() },
           ],
         }));
         return id;

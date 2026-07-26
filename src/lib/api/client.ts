@@ -21,3 +21,17 @@ export async function resolveSoundCloudStreamUrl(trackId: string): Promise<strin
   const data = (await response.json()) as { streamUrl: string };
   return data.streamUrl;
 }
+
+export async function importYouTubePlaylist(urlOrId: string): Promise<{
+  id: string;
+  name: string;
+  description?: string;
+  tracks: import('@/store/usePlayerStore').Track[];
+}> {
+  const response = await fetch(`/api/youtube/playlist?list=${encodeURIComponent(urlOrId)}`);
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.error || `Playlist import failed with status ${response.status}`);
+  }
+  return response.json();
+}

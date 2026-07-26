@@ -3,9 +3,10 @@
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { TrackRow } from '@/components/TrackRow';
+import { ImportYouTubePlaylistModal } from '@/components/ImportYouTubePlaylistModal';
 import { usePlayerStore, type Track, type Playlist, LIKED_SONGS_ID } from '@/store/usePlayerStore';
 import { resolveSoundCloudStreamUrl } from '@/lib/api/client';
-import { formatTime } from '@/lib/formatTime';
+import { formatTime, formatPlaylistDuration } from '@/lib/formatTime';
 
 // ─── Icons ──────────────────────────────────────────────────────────────────
 
@@ -41,9 +42,9 @@ function DotsIcon() {
   );
 }
 
-function TrashIcon() {
+function TrashIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className={className}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
     </svg>
   );
@@ -73,8 +74,8 @@ function PlaylistArtwork({ tracks, isLikedSongs = false, size = 'md' }: {
   isLikedSongs?: boolean;
   size?: 'sm' | 'md' | 'lg' | 'card';
 }) {
-  const sizeClass = { sm: 'h-12 w-12', md: 'h-16 w-16', lg: 'h-52 w-52', card: 'w-full aspect-square' }[size];
-  const imgSize = { sm: '48px', md: '64px', lg: '208px', card: '200px' }[size];
+  const sizeClass = { sm: 'h-12 w-12', md: 'h-16 w-16', lg: 'h-48 w-48 sm:h-56 sm:w-56 md:h-60 md:w-60 shadow-2xl shadow-black/80 rounded-md', card: 'w-full aspect-square' }[size];
+  const imgSize = { sm: '48px', md: '64px', lg: '240px', card: '200px' }[size];
 
   if (isLikedSongs) {
     return (
@@ -221,6 +222,69 @@ function RenameModal({ playlist, onClose, onRename }: {
   );
 }
 
+// ─── Delete Playlist Modal ───────────────────────────────────────────────────
+
+export function DeletePlaylistModal({ playlistName, onClose, onDelete }: {
+  playlistName: string;
+  onClose: () => void;
+  onDelete: () => void;
+}) {
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl border border-white/[0.1] bg-[#141420] p-6 shadow-2xl transition-all"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-500/10 border border-red-500/20 text-red-400">
+            <TrashIcon className="h-6 w-6" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white">Delete playlist?</h3>
+            <p className="text-xs text-white/40 mt-0.5">This action cannot be undone.</p>
+          </div>
+        </div>
+
+        <p className="text-sm text-white/70 mb-6 leading-relaxed">
+          Are you sure you want to delete <span className="font-semibold text-white">&quot;{playlistName}&quot;</span>? It will be permanently removed from your library.
+        </p>
+
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl px-5 py-2.5 text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onDelete();
+              onClose();
+            }}
+            className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/20 hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95"
+            autoFocus
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Playlist Card ───────────────────────────────────────────────────────────
 
 function PlaylistCard({ playlist, isLikedSongs, onClick }: {
@@ -251,9 +315,10 @@ function PlaylistCard({ playlist, isLikedSongs, onClick }: {
 
 // ─── Library Grid View ───────────────────────────────────────────────────────
 
-function LibraryGridView({ onOpenPlaylist, onCreatePlaylist }: {
+function LibraryGridView({ onOpenPlaylist, onCreatePlaylist, onImportYouTube }: {
   onOpenPlaylist: (id: string) => void;
   onCreatePlaylist: () => void;
+  onImportYouTube: () => void;
 }) {
   const library = usePlayerStore((s) => s.library);
   const playlists = usePlayerStore((s) => s.playlists);
@@ -269,14 +334,27 @@ function LibraryGridView({ onOpenPlaylist, onCreatePlaylist }: {
       <div className="px-6 pt-6 pb-2">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-white tracking-tight">Your Library</h2>
-          <button
-            type="button"
-            onClick={onCreatePlaylist}
-            className="flex items-center justify-center h-8 w-8 rounded-full text-[#a7a7a7] hover:text-white hover:bg-[#2a2a2a] transition-all"
-            title="Create Playlist"
-          >
-            <PlusIcon className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onImportYouTube}
+              className="flex items-center gap-1.5 rounded-full bg-red-600/15 border border-red-500/30 px-3 py-1.5 text-xs font-semibold text-red-400 hover:bg-red-600/25 transition-all shadow-sm"
+              title="Import YouTube Playlist Link"
+            >
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 text-red-500">
+                <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+              </svg>
+              Import YouTube
+            </button>
+            <button
+              type="button"
+              onClick={onCreatePlaylist}
+              className="flex items-center justify-center h-8 w-8 rounded-full text-[#a7a7a7] hover:text-white hover:bg-[#2a2a2a] transition-all"
+              title="Create Playlist"
+            >
+              <PlusIcon className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -306,6 +384,8 @@ function PlaylistDetailView({ playlistId, onBack }: {
   const library = usePlayerStore((s) => s.library);
   const playlists = usePlayerStore((s) => s.playlists);
   const currentTrack = usePlayerStore((s) => s.currentTrack);
+  const userDisplayName = usePlayerStore((s) => s.userDisplayName);
+  const userPhotoURL = usePlayerStore((s) => s.userPhotoURL);
   const setQueue = usePlayerStore((s) => s.setQueue);
   const deletePlaylist = usePlayerStore((s) => s.deletePlaylist);
   const renamePlaylist = usePlayerStore((s) => s.renamePlaylist);
@@ -314,6 +394,7 @@ function PlaylistDetailView({ playlistId, onBack }: {
   const [resolvingTrackId, setResolvingTrackId] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showRenameModal, setShowRenameModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isLiked = playlistId === LIKED_SONGS_ID;
@@ -364,44 +445,66 @@ function PlaylistDetailView({ playlistId, onBack }: {
   }
 
   const totalDuration = playlist.tracks.reduce((acc, t) => acc + (t.duration || 0), 0);
+  const formattedDuration = formatPlaylistDuration(totalDuration);
+  const creatorName = userDisplayName || 'Shiva';
 
   return (
     <div className="flex h-full flex-col bg-[#121212] overflow-y-auto">
-      {/* Hero header */}
-      <div className="relative border-b border-white/[0.04] px-6 pt-5 pb-5">
+      {/* Hero header with Spotify dark gradient background */}
+      <div className="relative bg-gradient-to-b from-[#263346]/80 via-[#1b2230]/60 to-[#121212] border-b border-white/[0.05] px-6 pt-5 pb-6">
         {/* subtle background glow from artwork */}
-        <div className="pointer-events-none absolute inset-0 opacity-20 overflow-hidden"
-          style={{ background: isLiked ? 'radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.6) 0%, transparent 60%)' : 'radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.3) 0%, transparent 60%)' }}
+        <div className="pointer-events-none absolute inset-0 opacity-25 overflow-hidden"
+          style={{ background: isLiked ? 'radial-gradient(ellipse at 20% 50%, rgba(139,92,246,0.6) 0%, transparent 60%)' : 'radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.4) 0%, transparent 60%)' }}
         />
 
         {/* Back button */}
         <button
           type="button"
           onClick={onBack}
-          className="mb-4 flex items-center gap-1 text-xs font-medium text-white/40 hover:text-white transition-colors"
+          className="relative z-10 mb-4 flex items-center gap-1 text-xs font-medium text-white/50 hover:text-white transition-colors"
         >
           <ChevronLeftIcon />
           Your Library
         </button>
 
-        <div className="flex items-end gap-5">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-end gap-6">
           <PlaylistArtwork tracks={playlist.tracks} isLikedSongs={isLiked} size="lg" />
 
           <div className="flex-1 min-w-0 pb-1">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-white/35 mb-1">Playlist</p>
-            <h2 className="text-3xl font-extrabold text-white tracking-tight leading-tight mb-2 truncate">{playlist.name}</h2>
-            {playlist.description && (
-              <p className="text-sm text-white/40 mb-2 line-clamp-2">{playlist.description}</p>
-            )}
-            <p className="text-xs text-white/30">
-              {playlist.tracks.length} {playlist.tracks.length === 1 ? 'song' : 'songs'}
-              {totalDuration > 0 && ` · ${formatTime(totalDuration)}`}
+            <p className="text-xs font-bold uppercase tracking-wider text-white/80 mb-1 sm:mb-2">
+              {isLiked ? 'Playlist' : 'Public Playlist'}
             </p>
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-tight leading-none mb-3 drop-shadow-md select-none break-words">
+              {playlist.name}
+            </h1>
+            {playlist.description && (
+              <p className="text-sm font-medium text-white/70 mb-3 max-w-3xl line-clamp-2 leading-relaxed">
+                {playlist.description}
+              </p>
+            )}
+
+            {/* Creator & Meta info row (Spotify layout) */}
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-white/90 font-medium flex-wrap mt-2">
+              {userPhotoURL ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={userPhotoURL} alt={creatorName} className="h-6 w-6 rounded-full object-cover shrink-0" />
+              ) : (
+                <div className="h-6 w-6 rounded-full bg-violet-600 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
+                  {creatorName.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="font-bold text-white hover:underline cursor-pointer">{creatorName}</span>
+              <span className="text-white/60 mx-0.5">•</span>
+              <span>{playlist.tracks.length} {playlist.tracks.length === 1 ? 'song' : 'songs'}</span>
+              {formattedDuration && (
+                <span className="text-white/70">, {formattedDuration}</span>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Actions row */}
-        <div className="mt-4 flex items-center gap-3">
+        <div className="relative z-10 mt-6 flex items-center gap-4">
           <button
             type="button"
             onClick={handlePlayAll}
@@ -433,7 +536,7 @@ function PlaylistDetailView({ playlistId, onBack }: {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { deletePlaylist(playlistId); onBack(); }}
+                    onClick={() => { setShowDeleteModal(true); setShowMenu(false); }}
                     className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-950/30 transition-colors"
                   >
                     <TrashIcon /> Delete
@@ -475,11 +578,23 @@ function PlaylistDetailView({ playlistId, onBack }: {
       </div>
 
       {/* Rename modal */}
-      {showRenameModal && !isLiked && (
+      {showRenameModal && !isLiked && playlist && (
         <RenameModal
           playlist={playlist as Playlist}
           onClose={() => setShowRenameModal(false)}
           onRename={(name) => renamePlaylist(playlistId, name)}
+        />
+      )}
+
+      {/* Delete confirmation modal */}
+      {showDeleteModal && !isLiked && playlist && (
+        <DeletePlaylistModal
+          playlistName={playlist.name}
+          onClose={() => setShowDeleteModal(false)}
+          onDelete={() => {
+            deletePlaylist(playlistId);
+            onBack();
+          }}
         />
       )}
     </div>
@@ -583,6 +698,7 @@ export function LibraryPanel() {
   const createPlaylist = usePlayerStore((s) => s.createPlaylist);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showImportYouTubeModal, setShowImportYouTubeModal] = useState(false);
 
   function handleCreate(name: string, description: string) {
     createPlaylist(name, description || undefined);
@@ -598,6 +714,9 @@ export function LibraryPanel() {
         {showCreateModal && (
           <CreatePlaylistModal onClose={() => setShowCreateModal(false)} onCreate={handleCreate} />
         )}
+        {showImportYouTubeModal && (
+          <ImportYouTubePlaylistModal onClose={() => setShowImportYouTubeModal(false)} />
+        )}
       </>
     );
   }
@@ -607,9 +726,13 @@ export function LibraryPanel() {
       <LibraryGridView
         onOpenPlaylist={(id) => setActivePlaylistId(id)}
         onCreatePlaylist={() => setShowCreateModal(true)}
+        onImportYouTube={() => setShowImportYouTubeModal(true)}
       />
       {showCreateModal && (
         <CreatePlaylistModal onClose={() => setShowCreateModal(false)} onCreate={handleCreate} />
+      )}
+      {showImportYouTubeModal && (
+        <ImportYouTubePlaylistModal onClose={() => setShowImportYouTubeModal(false)} />
       )}
     </>
   );
