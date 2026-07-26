@@ -8,10 +8,10 @@ import { fetchAggregatedSearch, resolveSoundCloudStreamUrl } from '@/lib/api/cli
 import type { AggregatedSearchResult } from '@/lib/api/types';
 
 const SECTIONS: Array<{ key: keyof Omit<AggregatedSearchResult, 'errors'>; label: string; color: string }> = [
-  { key: 'spotify',    label: 'Spotify',    color: 'text-emerald-400' },
-  { key: 'youtube',    label: 'YouTube',    color: 'text-red-400' },
+  { key: 'spotify', label: 'Spotify', color: 'text-emerald-400' },
+  { key: 'youtube', label: 'YouTube', color: 'text-red-400' },
   { key: 'soundcloud', label: 'SoundCloud', color: 'text-orange-400' },
-  { key: 'vsnectar',   label: 'VS Nectar',  color: 'text-amber-400' },
+  { key: 'vsnectar', label: 'VS Nectar', color: 'text-amber-400' },
 ];
 
 // ─── Home Grid (Spotify-style quick access) ───────────────────────────────────
@@ -61,7 +61,7 @@ function HomeGrid({ recentSearches, onSearchRecent }: {
                 {item.isLiked ? (
                   <div className="h-full w-full bg-gradient-to-br from-violet-700 via-violet-500 to-indigo-400 flex items-center justify-center">
                     <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7 text-white">
-                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                     </svg>
                   </div>
                 ) : item.artwork ? (
@@ -70,7 +70,7 @@ function HomeGrid({ recentSearches, onSearchRecent }: {
                 ) : (
                   <div className="h-full w-full bg-[#404040] flex items-center justify-center">
                     <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-[#a7a7a7]">
-                      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                      <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                     </svg>
                   </div>
                 )}
@@ -88,7 +88,7 @@ function HomeGrid({ recentSearches, onSearchRecent }: {
             >
               <div className="h-16 w-16 shrink-0 bg-[#404040] flex items-center justify-center">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#a7a7a7" strokeWidth={2} className="h-6 w-6">
-                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35" strokeLinecap="round"/>
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" strokeLinecap="round" />
                 </svg>
               </div>
               <span className="px-3 text-sm font-bold text-white truncate">{q}</span>
@@ -280,16 +280,101 @@ function AllCapsuleLogo({ className = "h-4 w-4" }: { className?: string }) {
             const isActive = activeTab === tab.key;
             const TabIcon = tab.Icon;
 
+<<<<<<< Updated upstream
             return (
+=======
+          {/* Search bar — Spotify pill style */}
+          <div ref={dropdownRef} className="relative flex-1">
+            <form onSubmit={handleSearch}>
+              <div className="relative">
+                <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                  {isSearching
+                    ? <LoadingSpinner />
+                    : <svg viewBox="0 0 24 24" fill="none" stroke="#b3b3b3" strokeWidth={2.5} className="h-4 w-4"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" strokeLinecap="round" /></svg>
+                  }
+                </div>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => setIsDropdownOpen(true)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearch(e as unknown as FormEvent); } }}
+                  placeholder="What do you want to play?"
+                  className="w-full rounded-full bg-[#2a2a2a] pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-[#a7a7a7] focus:outline-none focus:ring-2 focus:ring-white/20 hover:bg-[#3a3a3a] transition-colors"
+                />
+              </div>
+            </form>
+
+            {/* Recent Searches Dropdown */}
+            {isDropdownOpen && recentSearches.length > 0 && (
+              <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 rounded-2xl border border-white/[0.07] bg-[#12121a]/95 p-2 shadow-2xl backdrop-blur-xl animate-fade-up">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.05] mb-1">
+                  <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Recent
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => clearRecentSearches()}
+                    className="text-[10px] text-white/20 hover:text-red-400 transition-colors"
+                  >
+                    Clear all
+                  </button>
+                </div>
+
+                <div className="max-h-52 overflow-y-auto space-y-0.5">
+                  {recentSearches.map((item) => (
+                    <div
+                      key={item}
+                      className="group flex items-center justify-between rounded-xl px-3 py-2 text-xs text-white/50 hover:bg-white/[0.06] hover:text-white cursor-pointer transition-all"
+                      onClick={() => handleSelectRecent(item)}
+                    >
+                      <div className="flex items-center gap-2.5 truncate">
+                        <svg className="w-3 h-3 shrink-0 text-white/20 group-hover:text-violet-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <span className="truncate">{item}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); removeRecentSearch(item); }}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-white/20 hover:text-white/60 transition-all"
+                        title="Remove from history"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Platform Filter Tabs (shown after search) */}
+        {results && (
+          <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-0.5 no-scrollbar">
+            {tabs.map((tab) => (
+>>>>>>> Stashed changes
               <button
                 key={tab.key}
                 type="button"
                 onClick={() => setActiveTab(tab.key)}
+<<<<<<< Updated upstream
                 className={`flex items-center gap-2 shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition-all shadow-sm ${
                   isActive
                     ? `${tab.color} scale-105 shadow-md`
                     : 'bg-[#242424] text-white/80 hover:bg-[#323232] hover:text-white'
                 }`}
+=======
+                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${activeTab === tab.key
+                    ? 'bg-white text-black'
+                    : 'bg-[#2a2a2a] text-white hover:bg-[#3a3a3a]'
+                  }`}
+>>>>>>> Stashed changes
               >
                 <TabIcon className="h-4 w-4 shrink-0" />
                 <span>{tab.label}</span>
@@ -303,7 +388,7 @@ function AllCapsuleLogo({ className = "h-4 w-4" }: { className?: string }) {
         {searchError && (
           <div className="mb-5 flex items-center gap-2.5 rounded-lg bg-[#2a2a2a] px-4 py-3 text-sm text-red-400">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4 shrink-0">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
             {searchError}
           </div>
@@ -380,4 +465,5 @@ function AllCapsuleLogo({ className = "h-4 w-4" }: { className?: string }) {
       )}
     </div>
   );
+}
 }
