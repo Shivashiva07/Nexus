@@ -208,6 +208,31 @@ export function Sidebar() {
             );
           })}
         </div>
+        {/* Modals */}
+        {showCreateModal && (
+          <CreatePlaylistModal
+            onClose={() => setShowCreateModal(false)}
+            onCreate={handleCreate}
+          />
+        )}
+        {showImportYouTubeModal && (
+          <ImportYouTubePlaylistModal
+            onClose={() => setShowImportYouTubeModal(false)}
+          />
+        )}
+        {playlistToDelete && (
+          <DeletePlaylistModal
+            playlistName={playlistToDelete.name}
+            onClose={() => setPlaylistToDelete(null)}
+            onDelete={() => {
+              if (activePlaylistId === playlistToDelete.id) {
+                setActivePlaylistId(null);
+              }
+              deletePlaylist(playlistToDelete.id);
+              setPlaylistToDelete(null);
+            }}
+          />
+        )}
       </aside>
     );
   }
