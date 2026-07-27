@@ -7,12 +7,12 @@ import { usePlayerStore, LIKED_SONGS_ID, type Playlist } from '@/store/usePlayer
 import { CreatePlaylistModal, DeletePlaylistModal } from '@/components/LibraryPanel';
 import { ImportYouTubePlaylistModal } from '@/components/ImportYouTubePlaylistModal';
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
+// ─── Spotify Icons ────────────────────────────────────────────────────────────
 
-function LibraryIconBig() {
+function SpotifyLibraryIcon({ className = 'h-6 w-6' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-6 w-6 shrink-0">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8 3H5a2 2 0 00-2 2v14a2 2 0 002 2h3M8 3h13M8 3v18M21 3v18M21 3H8M21 21H8"/>
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM7 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM10.883 21.84a1 1 0 0 1-1.34-1.272l4.89-18a1 1 0 0 1 1.802.49l-4.89 18a.997.997 0 0 1-.462.782z"/>
     </svg>
   );
 }
@@ -49,7 +49,7 @@ function SearchSmallIcon() {
   );
 }
 
-function ListIcon() {
+function RecentsIcon() {
   return (
     <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
       <path d="M15 14.5H5V13h10v1.5zm0-5.75H5v-1.5h10v1.5zM15 3H5V1.5h10V3zM3 3H1V1.5h2V3zm0 5.75H1v-1.5h2v1.5zM3 14.5H1V13h2v1.5z"/>
@@ -83,6 +83,7 @@ export function Sidebar() {
   const [showImportYouTubeModal, setShowImportYouTubeModal] = useState(false);
   const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'playlists'>('all');
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Store
@@ -145,96 +146,126 @@ export function Sidebar() {
 
   const likedActive = activePlaylistId === LIKED_SONGS_ID && activeView === 'library';
 
-  // ─── Collapsed sidebar ───────────────────────────────────────────────────────
+  // ─── Collapsed sidebar (Spotify Design) ──────────────────────────────────────
   if (isCollapsed) {
     return (
-      <aside className="flex h-full w-[72px] shrink-0 flex-col bg-[#000000] py-2 gap-1">
-        {/* Nexus logo */}
-        <div className="flex items-center justify-center px-3 py-3 mb-3">
-          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg bg-white/[0.05] border border-white/[0.08] shadow-md">
+      <aside className="flex h-full w-[72px] shrink-0 flex-col bg-[#000000] p-2 gap-2 select-none">
+        {/* Brand App Logo */}
+        <div className="flex items-center justify-center py-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveView('search')}
+            title="Nexus Home"
+            className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 hover:scale-105 transition-transform"
+          >
             <Image src={logoImg} alt="Nexus Logo" className="h-full w-full object-cover" />
-          </div>
+          </button>
         </div>
 
-        {/* Library icon → expand */}
-        <button
-          type="button"
-          title="Expand Your Library"
-          onClick={() => setIsCollapsed(false)}
-          className="flex flex-col items-center gap-1 px-2 py-3 text-[#b3b3b3] hover:text-white transition-all"
-        >
-          <LibraryIconBig />
-          <span className="text-[9px] font-semibold">Library</span>
-        </button>
+        {/* Library Card Container */}
+        <div className="bg-[#121212] rounded-2xl flex-1 flex flex-col items-center py-3 px-1.5 gap-3 overflow-y-auto no-scrollbar">
+          {/* Library expand toggle icon */}
+          <button
+            type="button"
+            title="Expand Your Library"
+            onClick={() => setIsCollapsed(false)}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[#b3b3b3] hover:text-white hover:bg-[#1f1f1f] transition-all shrink-0"
+          >
+            <SpotifyLibraryIcon className="h-6 w-6" />
+          </button>
 
-        <div className="my-1 border-t border-white/[0.07]" />
+          {/* Plus button */}
+          <button
+            type="button"
+            title="Create playlist"
+            onClick={() => setShowCreateModal(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-[#b3b3b3] hover:text-white hover:bg-[#1f1f1f] transition-all shrink-0"
+          >
+            <PlusIcon />
+          </button>
 
-        {/* Liked Songs */}
-        <button
-          type="button"
-          title="Liked Songs"
-          onClick={() => { setActiveView('library'); setActivePlaylistId(LIKED_SONGS_ID); }}
-          className={`mx-auto flex h-12 w-12 items-center justify-center rounded transition-all hover:opacity-80 ${likedActive ? 'ring-2 ring-violet-500 ring-offset-1 ring-offset-black' : ''}`}
-        >
-          <div className="h-12 w-12 rounded flex items-center justify-center bg-gradient-to-br from-violet-700 via-violet-500 to-indigo-400">
-            <HeartFilledIcon />
-          </div>
-        </button>
+          <div className="w-8 border-t border-white/[0.08] my-0.5" />
 
-        {/* User playlists */}
-        {playlists.map((p) => {
-          const artwork = p.tracks.find((t) => t.artwork)?.artwork;
-          const isActive = activePlaylistId === p.id && activeView === 'library';
-          return (
-            <button
-              key={p.id}
-              type="button"
-              title={p.name}
-              onClick={() => { setActiveView('library'); setActivePlaylistId(p.id); }}
-              className={`mx-auto flex h-12 w-12 items-center justify-center rounded overflow-hidden transition-all hover:opacity-80 ${isActive ? 'ring-2 ring-violet-500 ring-offset-1 ring-offset-black' : ''}`}
-            >
-              {artwork ? (
-                <Image src={artwork} alt={p.name} width={48} height={48} className="object-cover w-full h-full" />
-              ) : (
-                <div className="h-12 w-12 rounded bg-[#282828] flex items-center justify-center">
-                  <MusicNoteIcon />
-                </div>
-              )}
-            </button>
-          );
-        })}
+          {/* Liked Songs */}
+          <button
+            type="button"
+            title="Liked Songs"
+            onClick={() => { setActiveView('library'); setActivePlaylistId(LIKED_SONGS_ID); }}
+            className={`relative h-12 w-12 shrink-0 rounded-md overflow-hidden transition-all hover:scale-105 ${likedActive ? 'ring-2 ring-violet-500 ring-offset-2 ring-offset-[#121212]' : ''}`}
+          >
+            <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-[#450af5] via-[#652cd1] to-[#8e8ee5]">
+              <HeartFilledIcon />
+            </div>
+          </button>
 
-        <div className="mt-auto" />
+          {/* Playlists */}
+          {playlists.map((p) => {
+            const artwork = p.tracks.find((t) => t.artwork)?.artwork;
+            const isActive = activePlaylistId === p.id && activeView === 'library';
+            return (
+              <button
+                key={p.id}
+                type="button"
+                title={p.name}
+                onClick={() => { setActiveView('library'); setActivePlaylistId(p.id); }}
+                className={`relative h-12 w-12 shrink-0 rounded-md overflow-hidden transition-all hover:scale-105 bg-[#282828] ${isActive ? 'ring-2 ring-violet-500 ring-offset-2 ring-offset-[#121212]' : ''}`}
+              >
+                {artwork ? (
+                  <Image src={artwork} alt={p.name} width={48} height={48} className="object-cover w-full h-full" />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center">
+                    <MusicNoteIcon />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </aside>
     );
   }
 
-  // ─── Expanded sidebar ─────────────────────────────────────────────────────────
+  // ─── Expanded sidebar (Spotify Design) ───────────────────────────────────────
   return (
     <aside
       style={{ width: `${sidebarWidth}px` }}
-      className="relative flex h-full shrink-0 flex-col bg-[#000000] overflow-hidden p-2 select-none group/sidebar"
+      className="relative flex h-full shrink-0 flex-col bg-[#000000] p-2 gap-2 select-none group/sidebar overflow-hidden"
     >
+      {/* ── Top Brand Header ────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-3 py-1 shrink-0">
+        <button
+          type="button"
+          onClick={() => setActiveView('search')}
+          className="flex items-center gap-3 text-left group transition-all"
+          title="Nexus Home"
+        >
+          <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-white/10 shadow-md group-hover:scale-105 transition-transform">
+            <Image src={logoImg} alt="Nexus Logo" className="h-full w-full object-cover" />
+          </div>
+          <span className="text-base font-bold text-white tracking-tight">Nexus</span>
+        </button>
+      </div>
 
-      {/* ── Your Library ────────────────────────────────────────── */}
-      <div className="bg-[#121212] rounded-lg mx-2 flex-1 overflow-hidden flex flex-col">
+      {/* ── Your Library Card ───────────────────────────────────────── */}
+      <div className="bg-[#121212] rounded-xl flex-1 overflow-hidden flex flex-col">
 
-        {/* Library Header */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2 flex-shrink-0">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
           <button
             type="button"
             onClick={() => { setActiveView('library'); setActivePlaylistId(null); }}
             className="flex items-center gap-3 text-[#b3b3b3] hover:text-white transition-colors group"
           >
-            <LibraryIconBig />
-            <span className="text-sm font-bold">Your Library</span>
+            <SpotifyLibraryIcon className="h-6 w-6 text-[#b3b3b3] group-hover:text-white transition-colors" />
+            <span className="text-base font-bold tracking-tight">Your Library</span>
           </button>
+
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => setShowImportYouTubeModal(true)}
-              title="Import YouTube Playlist Link"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-red-500 hover:bg-red-500/20 transition-all"
+              title="Import YouTube Playlist"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-red-500 hover:bg-[#1f1f1f] transition-all"
             >
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                 <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
@@ -244,7 +275,7 @@ export function Sidebar() {
               type="button"
               onClick={() => setShowCreateModal(true)}
               title="Create playlist"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-[#b3b3b3] hover:text-white hover:bg-[#2a2a2a] transition-all"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[#b3b3b3] hover:text-white hover:bg-[#1f1f1f] transition-all"
             >
               <PlusIcon />
             </button>
@@ -252,24 +283,32 @@ export function Sidebar() {
               type="button"
               onClick={() => setIsCollapsed(true)}
               title="Collapse sidebar"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-[#b3b3b3] hover:text-white hover:bg-[#2a2a2a] transition-all"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[#b3b3b3] hover:text-white hover:bg-[#1f1f1f] transition-all"
             >
               <ArrowLeftIcon />
             </button>
           </div>
         </div>
 
-        {/* Filter pills */}
-        <div className="flex gap-2 px-4 pb-3 flex-shrink-0">
-          <span className="rounded-full bg-white text-black text-xs font-semibold px-3.5 py-1 transition-all">
+        {/* Filter Pills */}
+        <div className="flex gap-2 px-4 pb-3 shrink-0">
+          <button
+            type="button"
+            onClick={() => setSelectedFilter(selectedFilter === 'playlists' ? 'all' : 'playlists')}
+            className={`rounded-full text-xs font-semibold px-3 py-1.5 transition-all ${
+              selectedFilter === 'playlists'
+                ? 'bg-white text-black'
+                : 'bg-[#232323] text-white hover:bg-[#2a2a2a]'
+            }`}
+          >
             Playlists
-          </span>
+          </button>
         </div>
 
-        {/* Search row */}
-        <div className="flex items-center justify-between px-4 pb-2 flex-shrink-0">
+        {/* Search & Recents sorting row */}
+        <div className="flex items-center justify-between px-4 pb-2 shrink-0">
           {showSearch ? (
-            <div className="flex flex-1 items-center gap-2 rounded bg-[#2a2a2a] px-3 py-2">
+            <div className="flex flex-1 items-center gap-2 rounded-md bg-[#242424] px-3 py-1.5">
               <SearchSmallIcon />
               <input
                 ref={searchInputRef}
@@ -278,35 +317,40 @@ export function Sidebar() {
                 onBlur={() => { if (!searchQuery) setShowSearch(false); }}
                 onKeyDown={(e) => { if (e.key === 'Escape') { setSearchQuery(''); setShowSearch(false); } }}
                 placeholder="Search in Your Library"
-                className="flex-1 bg-transparent text-sm text-white placeholder:text-[#6a6a6a] focus:outline-none"
+                className="flex-1 bg-transparent text-xs text-white placeholder:text-[#7f7f7f] focus:outline-none"
               />
             </div>
           ) : (
             <button
               type="button"
               onClick={() => setShowSearch(true)}
-              className="p-1.5 rounded-full text-[#b3b3b3] hover:text-white hover:bg-[#2a2a2a] transition-all"
+              className="p-1.5 rounded-full text-[#b3b3b3] hover:text-white hover:bg-[#1f1f1f] transition-all"
               title="Search in Your Library"
             >
               <SearchSmallIcon />
             </button>
           )}
+
+          <div className="flex items-center gap-1 text-xs text-[#a7a7a7] hover:text-white transition-colors cursor-pointer ml-auto">
+            <span className="font-medium">Recents</span>
+            <RecentsIcon />
+          </div>
         </div>
 
-        {/* Playlist list — scrollable */}
-        <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-px no-scrollbar">
+        {/* Scrollable Playlist List */}
+        <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-1 no-scrollbar">
 
           {/* Liked Songs */}
           <button
             type="button"
             onClick={() => { setActiveView('library'); setActivePlaylistId(LIKED_SONGS_ID); }}
-            className={`flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-all hover:bg-[#1a1a1a] ${likedActive ? 'bg-[#2a2a2a]' : ''}`}
+            className={`flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-all hover:bg-[#1f1f1f] ${likedActive ? 'bg-[#232323]' : ''}`}
           >
-            <div className="h-12 w-12 shrink-0 rounded overflow-hidden flex items-center justify-center bg-gradient-to-br from-violet-700 via-violet-500 to-indigo-400">
+            <div className="h-12 w-12 shrink-0 rounded-md overflow-hidden flex items-center justify-center bg-gradient-to-br from-[#450af5] via-[#652cd1] to-[#8e8ee5]">
               <HeartFilledIcon />
             </div>
             <div className="min-w-0 flex-1">
-              <p className={`truncate text-sm font-normal leading-snug ${likedActive ? 'text-violet-400' : 'text-white'}`}>
+              <p className={`truncate text-sm font-semibold leading-snug ${likedActive ? 'text-violet-400' : 'text-white'}`}>
                 Liked Songs
               </p>
               <p className="truncate text-xs text-[#a7a7a7] mt-0.5">Playlist · {library.length} songs</p>
@@ -321,10 +365,10 @@ export function Sidebar() {
               <div
                 key={p.id}
                 onClick={() => { setActiveView('library'); setActivePlaylistId(p.id); }}
-                className={`group flex w-full items-center justify-between rounded-md px-2 py-2 text-left transition-all hover:bg-[#1a1a1a] cursor-pointer ${isActive ? 'bg-[#2a2a2a]' : ''}`}
+                className={`group flex w-full items-center justify-between rounded-md px-2 py-2 text-left transition-all hover:bg-[#1f1f1f] cursor-pointer ${isActive ? 'bg-[#232323]' : ''}`}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="h-12 w-12 shrink-0 rounded overflow-hidden bg-[#282828]">
+                  <div className="h-12 w-12 shrink-0 rounded-md overflow-hidden bg-[#282828]">
                     {artwork ? (
                       <Image src={artwork} alt={p.name} width={48} height={48} className="object-cover w-full h-full" />
                     ) : (
@@ -334,7 +378,7 @@ export function Sidebar() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={`truncate text-sm font-normal leading-snug ${isActive ? 'text-violet-400' : 'text-white'}`}>
+                    <p className={`truncate text-sm font-semibold leading-snug ${isActive ? 'text-violet-400' : 'text-white'}`}>
                       {p.name}
                     </p>
                     <p className="truncate text-xs text-[#a7a7a7] mt-0.5">
@@ -343,7 +387,7 @@ export function Sidebar() {
                   </div>
                 </div>
 
-                {/* Remove from Library / Delete Button */}
+                {/* Delete Button */}
                 <button
                   type="button"
                   title="Remove from Library"
@@ -364,7 +408,7 @@ export function Sidebar() {
           )}
 
           {playlists.length === 0 && !searchQuery && (
-            <div className="px-4 py-4 rounded-lg bg-[#1a1a1a] mt-1">
+            <div className="px-4 py-4 rounded-lg bg-[#1f1f1f] mt-1">
               <p className="text-sm font-bold text-white mb-1">Create your first playlist</p>
               <p className="text-xs text-[#a7a7a7] mb-3">It&apos;s easy, we&apos;ll help you</p>
               <button
@@ -376,13 +420,8 @@ export function Sidebar() {
               </button>
             </div>
           )}
-
-
         </div>
       </div>
-
-      {/* Bottom padding */}
-      <div className="h-2" />
 
       {/* ── Drag Resize Handle ──────────────────────────────────── */}
       <div
@@ -401,7 +440,7 @@ export function Sidebar() {
         }`} />
       </div>
 
-      {/* ── Create Playlist Modal ───────────────────────────────── */}
+      {/* Modals */}
       {showCreateModal && (
         <CreatePlaylistModal
           onClose={() => setShowCreateModal(false)}
@@ -409,14 +448,12 @@ export function Sidebar() {
         />
       )}
 
-      {/* ── Import YouTube Playlist Modal ──────────────────────── */}
       {showImportYouTubeModal && (
         <ImportYouTubePlaylistModal
           onClose={() => setShowImportYouTubeModal(false)}
         />
       )}
 
-      {/* ── Delete Playlist Confirmation Modal ───────────────────── */}
       {playlistToDelete && (
         <DeletePlaylistModal
           playlistName={playlistToDelete.name}
