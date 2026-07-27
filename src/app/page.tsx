@@ -20,7 +20,7 @@ export default function Home() {
     <FirebaseSyncProvider>
       <div className="flex h-screen flex-col bg-black text-zinc-100">
         <TopBar />
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden px-2 pb-2 gap-2">
           <Sidebar />
           <main className="flex-1 overflow-hidden">
             {activeView === 'search' ? <SearchPanel /> : <LibraryPanel />}
