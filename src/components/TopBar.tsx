@@ -144,15 +144,11 @@ export function TopBar() {
       <button
         type="button"
         onClick={() => resetSearch()}
-        className="flex items-center gap-3 text-left group transition-all shrink-0 hover:opacity-90"
+        className="flex items-center text-left group transition-all shrink-0 hover:opacity-90"
         title="Nexus - Return to Home"
       >
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white/[0.05] border border-white/[0.08] shadow-md group-hover:scale-105 transition-transform">
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 shadow-md group-hover:scale-105 transition-transform">
           <Image src={logoImg} alt="Nexus Logo" className="h-full w-full object-cover" />
-        </div>
-        <div>
-          <h1 className="text-base font-bold text-white leading-tight tracking-tight">Nexus</h1>
-          <p className="text-[10px] font-medium text-[#a7a7a7] leading-none">Multi-Platform Player</p>
         </div>
       </button>
 

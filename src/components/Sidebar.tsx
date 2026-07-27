@@ -236,13 +236,12 @@ export function Sidebar() {
         <button
           type="button"
           onClick={() => setActiveView('search')}
-          className="flex items-center gap-3 text-left group transition-all"
+          className="flex items-center text-left group transition-all"
           title="Nexus Home"
         >
           <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-white/10 shadow-md group-hover:scale-105 transition-transform">
             <Image src={logoImg} alt="Nexus Logo" className="h-full w-full object-cover" />
           </div>
-          <span className="text-base font-bold text-white tracking-tight">Nexus</span>
         </button>
       </div>
 
