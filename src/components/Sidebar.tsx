@@ -1,6 +1,6 @@
 'use client';
 
-import logoImg from '../../public/logo.png';
+import logoImg from '../../public/icon.jpg';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { usePlayerStore, LIKED_SONGS_ID, type Playlist } from '@/store/usePlayerStore';
