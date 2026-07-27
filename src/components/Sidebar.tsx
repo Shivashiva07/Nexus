@@ -1,6 +1,5 @@
 'use client';
 
-import logoImg from '../../public/icon.jpg';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { usePlayerStore, LIKED_SONGS_ID, type Playlist } from '@/store/usePlayerStore';
@@ -149,21 +148,9 @@ export function Sidebar() {
   // ─── Collapsed sidebar (Spotify Design) ──────────────────────────────────────
   if (isCollapsed) {
     return (
-      <aside className="flex h-full w-[72px] shrink-0 flex-col bg-[#000000] select-none gap-2">
-        {/* Top Circular Logo */}
-        <div className="flex items-center justify-center pt-1 shrink-0">
-          <button
-            type="button"
-            onClick={() => setActiveView('search')}
-            title="Nexus Home"
-            className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/10 hover:scale-105 transition-transform"
-          >
-            <Image src={logoImg} alt="Nexus Logo" className="h-full w-full object-cover" />
-          </button>
-        </div>
-
+      <aside className="flex h-full w-[72px] shrink-0 flex-col bg-[#000000] select-none">
         {/* Library Card Container */}
-        <div className="bg-[#121212] rounded-2xl flex-1 flex flex-col items-center py-3 px-1.5 gap-3 overflow-y-auto no-scrollbar">
+        <div className="bg-[#121212] rounded-xl flex-1 flex flex-col items-center py-3 px-1.5 gap-3 overflow-y-auto no-scrollbar">
           {/* Library expand toggle icon */}
           <button
             type="button"
