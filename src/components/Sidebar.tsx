@@ -48,13 +48,6 @@ function SearchSmallIcon() {
   );
 }
 
-function RecentsIcon() {
-  return (
-    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-      <path d="M15 14.5H5V13h10v1.5zm0-5.75H5v-1.5h10v1.5zM15 3H5V1.5h10V3zM3 3H1V1.5h2V3zm0 5.75H1v-1.5h2v1.5zM3 14.5H1V13h2v1.5z"/>
-    </svg>
-  );
-}
 
 function HeartFilledIcon() {
   return (
@@ -327,11 +320,6 @@ export function Sidebar() {
               <SearchSmallIcon />
             </button>
           )}
-
-          <div className="flex items-center gap-1 text-xs text-[#a7a7a7] hover:text-white transition-colors cursor-pointer ml-auto">
-            <span className="font-medium">Recents</span>
-            <RecentsIcon />
-          </div>
         </div>
 
         {/* Scrollable Playlist List */}
